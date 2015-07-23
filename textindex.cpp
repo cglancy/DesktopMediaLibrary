@@ -43,7 +43,7 @@ void TextIndex::build(const QList<Video*> videos)
 
 QStringList TextIndex::words(const QString &str) const
 {
-    return str.split(QRegExp("[\\s\\:]"), QString::SkipEmptyParts);
+    return str.split(QRegExp("[\\s\\:,;\"()#?!]"), QString::SkipEmptyParts);
 }
 
 QStringList TextIndex::words(const QList<CategoryNode*> &categories) const
@@ -104,16 +104,14 @@ void TextIndex::addWord(const QString &originalWord, Video* video, Field field)
 
 void TextIndex::search(const QString &searchString, ResultsHash &results) const
 {
+    results.clear();
+
     // clean up search string
     QString text = searchString.simplified();
 
-    results.clear();
-
     QStringList wordList = words(text);
 
-    qDebug() << "word list = " << wordList;
-
-    if (wordList.size() == 1)
+    if (wordList.size() >= 1)
     {
         QString word = wordList.at(0).toLower();
 
@@ -132,46 +130,41 @@ void TextIndex::search(const QString &searchString, ResultsHash &results) const
             }
         }
     }
-    else if (wordList.size() > 1)
-    {
-        bool init = false;
-        QSet<Video*> intersectSet;
-        ResultsHash scoreHash;
 
-        foreach (QString originalWord, wordList)
+    if (wordList.size() > 1)
+    {
+        QSet<Video*> intersectSet = results.keys().toSet();
+
+        for (int i = 1; i < wordList.count(); i++)
         {
-            QSet<Video*> videoSet;
-            QString word = originalWord.toLower();
+            QString word = wordList.at(i).toLower();
 
             if (_index.contains(word))
             {
+                QSet<Video*> videoSet;
+
                 ResultsHash hash = _index.value(word);
                 for (auto i = hash.constBegin(); i != hash.constEnd(); ++i)
                 {
                     Video *video = i.key();
                     int score = i.value();
 
-                    if (scoreHash.contains(video))
-                        scoreHash[video] += score;
+                    if (results.contains(video))
+                        results[video] += score;
                     else
-                        scoreHash.insert(video, score);
+                        results.insert(video, score);
 
                     if (!videoSet.contains(video))
                         videoSet.insert(video);
                 }
-            }
 
-            if (!init)
-            {
-                init = true;
-                intersectSet = videoSet;
-            }
-            else
                 intersectSet.intersect(videoSet);
+            }
         }
 
+        // bonus score for videos that match all words
         foreach (Video *video, intersectSet)
-            results.insert(video, scoreHash.value(video));
+            results[video] *= 10;
     }
 }
 
