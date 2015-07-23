@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>VideoFileButton.qml</file>
+        <file>images/download.png</file>
+        <file>images/play.png</file>
+    </qresource>
+</RCC>
