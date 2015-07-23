@@ -43,7 +43,7 @@ void TextIndex::build(const QList<Video*> videos)
 
 QStringList TextIndex::words(const QString &str) const
 {
-    return str.split(QRegExp("[\\s\\:,;\"()#?!]"), QString::SkipEmptyParts);
+    return str.split(QRegExp("[\\s\\:,;\"\\(\\)#\\?!“”]"), QString::SkipEmptyParts);
 }
 
 QStringList TextIndex::words(const QList<CategoryNode*> &categories) const
@@ -83,7 +83,7 @@ void TextIndex::addWord(const QString &originalWord, Video* video, Field field)
 
     int score = 1;
     if (field == TitleField)
-        score = 100;
+        score = 10;
     else if (field == SummaryField)
         score = 2;
 
