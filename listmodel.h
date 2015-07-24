@@ -25,13 +25,13 @@ public:
         OnlineUrlRole,
         HighQualityFileUrlRole,
         HighQualityFileResolutionRole,
-        HighQualityFileStateRole,
+        HighQualityFileSizeRole,
         MediumQualityFileUrlRole,
         MediumQualityFileResolutionRole,
-        MediumQualityFileStateRole,
+        MediumQualityFileSizeRole,
         LowQualityFileUrlRole,
         LowQualityFileResolutionRole,
-        LowQualityFileStateRole
+        LowQualityFileSizeRole
     };
 
 public:
@@ -53,6 +53,7 @@ public:
 private:
     QString fileResolutionString(Video *video, Video::Quality quality) const;
     QString fileUrlString(Video *video, Video::Quality quality) const;
+    QString fileSizeString(Video *video, Video::Quality quality) const;
 
 private:
     CategoryNode *_filterCategory;

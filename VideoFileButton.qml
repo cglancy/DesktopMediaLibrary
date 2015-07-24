@@ -1,21 +1,35 @@
 import QtQuick 2.0
 
 Rectangle {
-    property string text
+    property alias qualityText: qualityTextField.text
+    property alias sizeText: sizeTextField.text
     property string url
     property string imageSource
     width: 64
     height: 30
     color: "transparent"
 
-    Text {
+    Column {
         anchors.right: parent.right
         anchors.rightMargin: 30
-        anchors.verticalCenter: parent.verticalCenter
-        text: parent.text
-        renderType: Text.NativeRendering
-        font.family: "Helvetica"
-        font.pixelSize: 10
+        Item {
+            width: 1
+            height: 4
+        }
+        Text {
+            id: qualityTextField
+            text: parent.text
+            renderType: Text.NativeRendering
+            font.family: "Helvetica"
+            font.pixelSize: 8
+        }
+        Text {
+            id: sizeTextField
+            text: parent.sizeText
+            renderType: Text.NativeRendering
+            font.family: "Helvetica"
+            font.pixelSize: 8
+        }
     }
     Image {
         anchors.right: parent.right

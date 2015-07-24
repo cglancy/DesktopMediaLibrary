@@ -144,6 +144,9 @@ QHash<int, QByteArray> ListModel::roleNames() const
     roles[HighQualityFileUrlRole] = "highQualityFileUrl";
     roles[MediumQualityFileUrlRole] = "mediumQualityFileUrl";
     roles[LowQualityFileUrlRole] = "lowQualityFileUrl";
+    roles[HighQualityFileSizeRole] = "highQualityFileSize";
+    roles[MediumQualityFileSizeRole] = "mediumQualityFileSize";
+    roles[LowQualityFileSizeRole] = "lowQualityFileSize";
 
     return roles;
 }
@@ -179,6 +182,12 @@ QVariant ListModel::data(const QModelIndex &index, int role) const
         v = QVariant(fileUrlString(video, Video::MediumQuality));
     else if (role == LowQualityFileUrlRole)
         v = QVariant(fileUrlString(video, Video::LowQuality));
+    else if (role == HighQualityFileSizeRole)
+        v = QVariant(fileSizeString(video, Video::HighQuality));
+    else if (role == MediumQualityFileSizeRole)
+        v = QVariant(fileSizeString(video, Video::MediumQuality));
+    else if (role == LowQualityFileSizeRole)
+        v = QVariant(fileSizeString(video, Video::LowQuality));
 
 	return v;
 }
@@ -189,7 +198,11 @@ QString ListModel::fileResolutionString(Video *video, Video::Quality quality) co
 
     VideoFile *file = video->file(quality);
     if (!file)
+    {
+        if (video->isOnlineOnly())
+            str = tr("Stream");
         return str;
+    }
 
     switch (file->resolution())
     {
@@ -219,5 +232,17 @@ QString ListModel::fileUrlString(Video *video, Video::Quality quality) const
         return str;
 
     str = file->url();
+    return str;
+}
+
+QString ListModel::fileSizeString(Video *video, Video::Quality quality) const
+{
+    QString str;
+
+    VideoFile *file = video->file(quality);
+    if (!file)
+        return str;
+
+    str = file->size();
     return str;
 }

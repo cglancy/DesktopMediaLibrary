@@ -28,6 +28,7 @@ ApplicationWindow {
             Item { Layout.fillWidth: true }
             TextField {
                 id: searchField
+                width: 300
                 placeholderText: "Search"
                 onTextChanged: controller.search(text)
             }
@@ -74,17 +75,20 @@ ApplicationWindow {
                         Row {
                             spacing: 0
                             VideoFileButton {
-                                text: onlineOnly ? "Stream" : highQualityFileResolution
-                                url: onlineOnly ? onlineUrl : highQualityFileUrl
+                                qualityText: highQualityFileResolution
+                                sizeText: highQualityFileSize
+                                url: highQualityFileUrl
                                 imageSource: onlineOnly ? "" : "images/download_24x24.png"
                             }
                             VideoFileButton {
-                                text: mediumQualityFileResolution
+                                qualityText: onlineOnly ? "" : mediumQualityFileResolution
+                                sizeText: mediumQualityFileSize
                                 url: mediumQualityFileUrl
                                 imageSource: mediumQualityFileUrl ? "images/download_24x24.png" : ""
                             }
                             VideoFileButton {
-                                text: lowQualityFileResolution
+                                qualityText: onlineOnly ? "" : lowQualityFileResolution
+                                sizeText: lowQualityFileSize
                                 url: lowQualityFileUrl
                                 imageSource: lowQualityFileUrl ? "images/download_24x24.png" : ""
                             }
@@ -103,6 +107,7 @@ ApplicationWindow {
                             renderType: Text.NativeRendering
                             font.pointSize: 10
                             font.family: "Helvetica"
+                            font.bold: true
                         }
                         Item {
                             height: 2; width: 408
