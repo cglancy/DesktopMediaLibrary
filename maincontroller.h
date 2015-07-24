@@ -6,6 +6,7 @@
 
 class TreeModel;
 class ListModel;
+class FileManager;
 
 class MainController : public QObject
 {
@@ -20,11 +21,13 @@ public:
 
     Q_INVOKABLE void search(const QString &text);
     Q_INVOKABLE void setCategory(const QModelIndex &index);
+    Q_INVOKABLE void clickVideoButton(const QString &url);
 
 private:
     TreeModel *_treeModel;
     ListModel *_listModel;
     TextIndex _textIndex;
+    FileManager *_fileManager;
 };
 
 #endif // MAINCONTROLLER_H

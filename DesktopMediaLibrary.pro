@@ -10,7 +10,8 @@ SOURCES += main.cpp \
     treemodel.cpp \
     listmodel.cpp \
     textindex.cpp \
-    videofile.cpp
+    videofile.cpp \
+    filemanager.cpp
 
 RESOURCES += qml.qrc
 
@@ -28,4 +29,5 @@ HEADERS += \
     treemodel.h \
     listmodel.h \
     textindex.h \
-    videofile.h
+    videofile.h \
+    filemanager.h

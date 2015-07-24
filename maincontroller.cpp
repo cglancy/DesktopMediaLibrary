@@ -1,17 +1,21 @@
 #include "maincontroller.h"
 #include "treemodel.h"
 #include "listmodel.h"
+#include "filemanager.h"
 
 #include <QRegExp>
+#include <QDesktopServices>
 #include <QDebug>
 
 MainController::MainController(QObject *parent)
     : QObject(parent),
       _treeModel(0),
-      _listModel(0)
+      _listModel(0),
+      _fileManager(0)
 {
     _treeModel = new TreeModel(this);
     _listModel = new ListModel(this);
+    _fileManager = new FileManager(this);
 }
 
 void MainController::loadData()
@@ -51,4 +55,18 @@ void MainController::setCategory(const QModelIndex &index)
     CategoryNode *category = _treeModel->category(index);
     if (category)
         _listModel->filterByCategory(category);
+}
+
+void MainController::clickVideoButton(const QString &url)
+{
+    qDebug() << "MainController::clickVideoButton(" << url << ")";
+
+    FileManager::FileState state = _fileManager->fileState(url);
+    if (state == FileManager::NotDownloadedState)
+        _fileManager->downloadFile(url);
+    else if (state == FileManager::DownloadedState)
+    {
+        QString fileUrl = "file:///" + _fileManager->localFilePath(url);
+        QDesktopServices::openUrl(fileUrl);
+    }
 }

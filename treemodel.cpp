@@ -170,37 +170,7 @@ void TreeModel::initWithFile(const QString &xmlFilename)
 
 bool TreeModel::parseLibrary(QXmlStreamReader& xml)
 {
-	QXmlStreamAttributes attributes = xml.attributes();
-
-	if (attributes.hasAttribute("name"))
-	{
-		QString name = Utility::validFileSystemString(attributes.value("name").toString());
-		_mediaDirectory = _videoDirectory + "/" + name;
-		_thumbnailDirectory = _mediaDirectory + "/thumbnails";
-
-		QDir mediaDir(_mediaDirectory);
-		if (!mediaDir.exists())
-        {
-			if (!createDirectory(_mediaDirectory))
-                return false;
-        }
-
-		QDir thumbDir(_thumbnailDirectory);
-		if (!thumbDir.exists())
-        {
-            if (!createDirectory(_thumbnailDirectory))
-                return false;
-        }
-	}
-	else
-	{
-		QDir thumbDir(_thumbnailDirectory);
-		if (!thumbDir.exists())
-        {
-            if (!createDirectory(_thumbnailDirectory))
-                return false;
-        }
-	}
+    //QXmlStreamAttributes attributes = xml.attributes();
 
     return true;
 }

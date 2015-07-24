@@ -79,18 +79,21 @@ ApplicationWindow {
                                 sizeText: highQualityFileSize
                                 url: highQualityFileUrl
                                 imageSource: onlineOnly ? "" : "images/download_24x24.png"
+                                onClicked: controller.clickVideoButton(highQualityFileUrl)
                             }
                             VideoFileButton {
                                 qualityText: onlineOnly ? "" : mediumQualityFileResolution
                                 sizeText: mediumQualityFileSize
                                 url: mediumQualityFileUrl
                                 imageSource: mediumQualityFileUrl ? "images/download_24x24.png" : ""
+                                onClicked: controller.clickVideoButton(mediumQualityFileUrl)
                             }
                             VideoFileButton {
                                 qualityText: onlineOnly ? "" : lowQualityFileResolution
                                 sizeText: lowQualityFileSize
                                 url: lowQualityFileUrl
                                 imageSource: lowQualityFileUrl ? "images/download_24x24.png" : ""
+                                onClicked: controller.clickVideoButton(lowQualityFileUrl)
                             }
                         }
                     }
