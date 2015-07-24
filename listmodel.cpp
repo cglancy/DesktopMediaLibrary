@@ -133,7 +133,11 @@ QHash<int, QByteArray> ListModel::roleNames() const
 {
     QHash<int, QByteArray> roles;
     roles[TitleRole] = "title";
+    roles[SummaryRole] = "summary";
+    roles[LengthRole] = "length";
     roles[ThumbnailUrlRole] = "thumbnailUrl";
+    roles[OnlineOnlyRole] = "onlineOnly";
+    roles[OnlineUrlRole] = "onlineUrl";
     roles[HighQualityFileResolutionRole] = "highQualityFileResolution";
     roles[MediumQualityFileResolutionRole] = "mediumQualityFileResolution";
     roles[LowQualityFileResolutionRole] = "lowQualityFileResolution";
@@ -153,8 +157,16 @@ QVariant ListModel::data(const QModelIndex &index, int role) const
 
     if (role == TitleRole)
         v = QVariant(video->title());
+    else if (role == SummaryRole)
+        v = QVariant(video->summary());
+    else if (role == LengthRole)
+        v = QVariant(video->length());
     else if (role == ThumbnailUrlRole)
         v = QVariant(QUrl(video->thumbnailUrl()));
+    else if (role == OnlineOnlyRole)
+        v = QVariant(video->isOnlineOnly());
+    else if (role == OnlineUrlRole)
+        v = QVariant(video->videoUrl());
     else if (role == HighQualityFileResolutionRole)
         v = QVariant(fileResolutionString(video, Video::HighQuality));
     else if (role == MediumQualityFileResolutionRole)

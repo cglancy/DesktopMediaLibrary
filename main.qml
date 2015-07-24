@@ -4,8 +4,8 @@ import QtQuick.Layouts 1.1
 
 ApplicationWindow {
     visible: true
-    width: 640
-    height: 480
+    width: 1024
+    height: 768
     title: qsTr("Desktop Media Library")
 
     menuBar: MenuBar {
@@ -28,6 +28,7 @@ ApplicationWindow {
             Item { Layout.fillWidth: true }
             TextField {
                 id: searchField
+                placeholderText: "Search"
                 onTextChanged: controller.search(text)
             }
         }
@@ -44,6 +45,7 @@ ApplicationWindow {
                 width: 300
             }
 
+            Layout.fillWidth: true
             alternatingRowColors: false
             model: treeModel
             onClicked: {
@@ -52,46 +54,77 @@ ApplicationWindow {
             }
         }
         ScrollView {
-            Layout.minimumWidth: 300
-            Layout.fillWidth: true
+            Layout.minimumWidth: 640
+
             Layout.fillHeight: true
-            GridView {
+            ListView {
                 anchors.fill: parent
                 anchors.margins: 10
                 model: listModel
-                cellHeight: 200
-                cellWidth: 210
-                delegate: Column {
-                    Text {
-                        text: title
-                        width: 192
-                        height: 30
-                        wrapMode: Text.WordWrap
-                        elide: Text.ElideRight
-                        verticalAlignment: Text.AlignBottom
-                        renderType: Text.NativeRendering
-                    }
-                    Item {
-                        height: 2; width: 192
-                    }
-                    Image {
-                        source: thumbnailUrl
-                        width: 192; height: 108
-                        fillMode: Image.PreserveAspectCrop
-                    }
-                    Row {
-                        spacing: 0
-                        VideoFileButton {
-                            text: highQualityFileResolution
-                            url: highQualityFileUrl
+                spacing: 10
+                contentHeight: 138
+                contentWidth: 600
+                delegate: Row {
+                    Column {
+                        Image {
+                            source: thumbnailUrl
+                            width: 192; height: 108
+                            fillMode: Image.PreserveAspectCrop
                         }
-                        VideoFileButton {
-                            text: mediumQualityFileResolution
-                            url: mediumQualityFileUrl
+                        Row {
+                            spacing: 0
+                            VideoFileButton {
+                                text: onlineOnly ? "Stream" : highQualityFileResolution
+                                url: onlineOnly ? onlineUrl : highQualityFileUrl
+                                imageSource: onlineOnly ? "" : "images/download_24x24.png"
+                            }
+                            VideoFileButton {
+                                text: mediumQualityFileResolution
+                                url: mediumQualityFileUrl
+                                imageSource: mediumQualityFileUrl ? "images/download_24x24.png" : ""
+                            }
+                            VideoFileButton {
+                                text: lowQualityFileResolution
+                                url: lowQualityFileUrl
+                                imageSource: lowQualityFileUrl ? "images/download_24x24.png" : ""
+                            }
                         }
-                        VideoFileButton {
-                            text: lowQualityFileResolution
-                            url: lowQualityFileUrl
+                    }
+                    Column {
+                        width: 4
+                        height: 1
+                    }
+                    Column {
+                        Text {
+                            text: title
+                            width: 408
+                            wrapMode: Text.WordWrap
+                            //elide: Text.ElideRight
+                            renderType: Text.NativeRendering
+                            font.pointSize: 10
+                            font.family: "Helvetica"
+                        }
+                        Item {
+                            height: 2; width: 408
+                        }
+                        Text {
+                            text: summary
+                            width: 408
+                            wrapMode: Text.WordWrap
+                            renderType: Text.NativeRendering
+                            font.pointSize: 8
+                            font.family: "Helvetica"
+                        }
+                        Item {
+                            height: 2; width: 408
+                        }
+                        Text {
+                            text: "Length: " + length
+                            width: 408
+                            wrapMode: Text.WordWrap
+                            renderType: Text.NativeRendering
+                            font.pointSize: 8
+                            font.family: "Helvetica"
                         }
                     }
                 }

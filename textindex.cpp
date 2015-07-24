@@ -104,6 +104,10 @@ void TextIndex::addWord(const QString &originalWord, Video* video, Field field)
 
 void TextIndex::search(const QString &searchString, ResultsHash &results) const
 {
+#ifdef QT_DEBUG
+    QDateTime start = QDateTime::currentDateTime();
+#endif
+
     results.clear();
 
     // clean up search string
@@ -166,6 +170,12 @@ void TextIndex::search(const QString &searchString, ResultsHash &results) const
         foreach (Video *video, intersectSet)
             results[video] *= 10;
     }
+
+#ifdef QT_DEBUG
+    QDateTime end = QDateTime::currentDateTime();
+    qDebug() << "TextIndex::search(" << searchString << ") took " << start.time().msecsTo(end.time()) << " milliseconds.";
+    qDebug() << "Result has " << results.size() << " videos.";
+#endif
 }
 
 

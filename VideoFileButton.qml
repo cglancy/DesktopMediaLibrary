@@ -3,15 +3,15 @@ import QtQuick 2.0
 Rectangle {
     property string text
     property string url
+    property string imageSource
     width: 64
     height: 30
-    color: "black"
+    color: "transparent"
 
     Text {
-        color: "white"
-        anchors.fill: parent
-        anchors.leftMargin: 4
-        verticalAlignment: Text.AlignVCenter
+        anchors.right: parent.right
+        anchors.rightMargin: 30
+        anchors.verticalCenter: parent.verticalCenter
         text: parent.text
         renderType: Text.NativeRendering
         font.family: "Helvetica"
@@ -21,7 +21,7 @@ Rectangle {
         anchors.right: parent.right
         anchors.rightMargin: 2
         anchors.verticalCenter: parent.verticalCenter
-        source: "images/download.png"
+        source: parent.imageSource
     }
 
     MouseArea {

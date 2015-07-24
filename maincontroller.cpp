@@ -16,7 +16,7 @@ MainController::MainController(QObject *parent)
 
 void MainController::loadData()
 {
-    _treeModel->initWithFile("C:\\Test\\lds-media-library-eng.xml");
+    _treeModel->initWithFile("C:\\Test\\lds-media-library.xml");
     _listModel->filterByCategory(_treeModel->rootCategory());
 
     _textIndex.build(_treeModel->videos());
@@ -28,8 +28,6 @@ void MainController::search(const QString &text)
     {
         TextIndex::ResultsHash results;
         _textIndex.search(text, results);
-
-        qDebug() << "Found " << results.size() << " videos with " << text << ".";
         _listModel->setSearchResults(results);
     }
     else

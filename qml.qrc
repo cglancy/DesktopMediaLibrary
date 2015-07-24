@@ -2,7 +2,9 @@
     <qresource prefix="/">
         <file>main.qml</file>
         <file>VideoFileButton.qml</file>
-        <file>images/download.png</file>
-        <file>images/play.png</file>
+        <file>images/download_32x32.png</file>
+        <file>images/play_32x32.png</file>
+        <file>images/download_24x24.png</file>
+        <file>images/play_24x24.png</file>
     </qresource>
 </RCC>

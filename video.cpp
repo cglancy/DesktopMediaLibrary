@@ -26,6 +26,11 @@ QString Video::id() const
     return _id;
 }
 
+bool Video::isOnlineOnly() const
+{
+    return _fileList.size() == 0;
+}
+
 QString Video::title() const
 {
     return _title;
@@ -54,6 +59,16 @@ QString Video::thumbnailUrl() const
 void Video::setThumbnailUrl(const QString &url)
 {
     _thumbUrl = url;
+}
+
+QString Video::videoUrl() const
+{
+    return _videoUrl;
+}
+
+void Video::setVideoUrl(const QString &url)
+{
+    _videoUrl = url;
 }
 
 QString Video::length() const

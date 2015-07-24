@@ -258,8 +258,11 @@ Video* TreeModel::parseVideo(QXmlStreamReader& xml)
     if (attributes.hasAttribute("length"))
         video->setLength(attributes.value("length").toString());
 
-    if (attributes.hasAttribute("thumbnail"))
-        video->setThumbnailUrl(attributes.value("thumbnail").toString());
+    if (attributes.hasAttribute("thumbnailUrl"))
+        video->setThumbnailUrl(attributes.value("thumbnailUrl").toString());
+
+    if (attributes.hasAttribute("videoUrl"))
+        video->setVideoUrl(attributes.value("videoUrl").toString());
 
 	return video;
 }

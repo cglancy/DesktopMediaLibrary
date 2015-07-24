@@ -21,6 +21,8 @@ public:
         ThumbnailUrlRole,
         LengthRole,
         CategoryPathRole,
+        OnlineOnlyRole,
+        OnlineUrlRole,
         HighQualityFileUrlRole,
         HighQualityFileResolutionRole,
         HighQualityFileStateRole,

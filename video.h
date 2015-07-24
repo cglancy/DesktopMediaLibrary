@@ -27,6 +27,8 @@ public:
 
     QString id() const;
 
+    bool isOnlineOnly() const;
+
     QString title() const;
     void setTitle(const QString &title);
 
@@ -35,6 +37,9 @@ public:
 
     QString thumbnailUrl() const;
     void setThumbnailUrl(const QString &url);
+
+    QString videoUrl() const;
+    void setVideoUrl(const QString &url);
 
     QString length() const;
     void setLength(const QString &length);
@@ -52,6 +57,7 @@ private:
     QString _title;
     QString _summary;
     QString _thumbUrl;
+    QString _videoUrl;
     QString _length;
     QList<VideoFile*> _fileList;
     QList<CategoryNode*> _categoryList;
