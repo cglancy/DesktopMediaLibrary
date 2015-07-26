@@ -2,6 +2,7 @@
 #include "categorynode.h"
 #include "video.h"
 #include "videofile.h"
+#include "progressimageprovider.h"
 
 #include <QLocale>
 #include <QSet>
@@ -46,7 +47,8 @@ static VideoTitleCompare s_videoTitleCompare;
 
 
 ListModel::ListModel(QObject *parent)
-	: QAbstractListModel(parent), _filterCategory(0)
+    : QAbstractListModel(parent),
+      _filterCategory(0)
 {
 }
 
@@ -147,7 +149,9 @@ QHash<int, QByteArray> ListModel::roleNames() const
     roles[HighQualityFileSizeRole] = "highQualityFileSize";
     roles[MediumQualityFileSizeRole] = "mediumQualityFileSize";
     roles[LowQualityFileSizeRole] = "lowQualityFileSize";
-
+    roles[HighQualityFileProgressImageRole] = "highQualityFileProgressImage";
+    roles[MediumQualityFileProgressImageRole] = "mediumQualityFileProgressImage";
+    roles[LowQualityFileProgressImageRole] = "lowQualityFileProgressImage";
     return roles;
 }
 
@@ -188,6 +192,12 @@ QVariant ListModel::data(const QModelIndex &index, int role) const
         v = QVariant(fileSizeString(video, Video::MediumQuality));
     else if (role == LowQualityFileSizeRole)
         v = QVariant(fileSizeString(video, Video::LowQuality));
+    else if (role == HighQualityFileProgressImageRole)
+        v = QVariant(fileProgressImage(video, Video::HighQuality));
+    else if (role == MediumQualityFileProgressImageRole)
+        v = QVariant(fileProgressImage(video, Video::MediumQuality));
+    else if (role == LowQualityFileProgressImageRole)
+        v = QVariant(fileProgressImage(video, Video::LowQuality));
 
 	return v;
 }
@@ -245,4 +255,24 @@ QString ListModel::fileSizeString(Video *video, Video::Quality quality) const
 
     str = file->size();
     return str;
+}
+
+QString ListModel::fileProgressImage(Video *video, Video::Quality quality) const
+{
+    QString str;
+
+    VideoFile *file = video->file(quality);
+    if (!file)
+        return str;
+
+    str = "image://progress/" + ProgressImageProvider::imageName(file->state(), file->progress());
+
+    return str;
+}
+
+void ListModel::updateVideo(Video *video)
+{
+    int row = _videoList.indexOf(video);
+    QModelIndex index = createIndex(row, 0);
+    emit dataChanged(index, index);
 }

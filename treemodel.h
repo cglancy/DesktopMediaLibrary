@@ -8,6 +8,7 @@
 
 class CategoryNode;
 class Video;
+class MediaFile;
 class QXmlStreamReader;
 
 class TreeModel : public QAbstractItemModel
@@ -19,10 +20,14 @@ public:
     ~TreeModel();
 
     void initWithFile(const QString &xmlFilename);
+    void initFileStates();
 	void clear();
 
     CategoryNode * rootCategory() const;
 	QList<Video*> videos() const;
+
+    MediaFile * file(const QString &url) const;
+    Video * video(const QString &url) const;
 
     QModelIndex index(CategoryNode *category) const;
     CategoryNode * category(const QModelIndex &index) const;
@@ -43,10 +48,13 @@ private:
 	bool parseLibrary(QXmlStreamReader& xml);
     bool createDirectory(const QString &path);
     QString stripUrlQuery(const QString &url);
+    static void initFileState(MediaFile *file);
 
 private:
     CategoryNode *_rootCategory;
     QHash<QString, Video*> _videoHash;
+    QHash<QString, Video*> _videoUrlHash;
+    QHash<QString, MediaFile*> _fileUrlHash;
     QList<QPair<CategoryNode*, QString> > _refList;
 	QString _videoDirectory, _mediaDirectory, _thumbnailDirectory;
     QPixmap _folderPixmap;

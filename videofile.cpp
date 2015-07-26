@@ -2,7 +2,8 @@
 #include "video.h"
 
 VideoFile::VideoFile(Video *video, Resolution resolution)
-    : _video(video),
+    : MediaFile(MediaFile::VideoType),
+      _video(video),
       _resolution(resolution)
 {
     if (video)
@@ -17,16 +18,6 @@ bool VideoFile::operator<(const VideoFile &file) const
 Video * VideoFile::video() const
 {
     return _video;
-}
-
-QString VideoFile::url() const
-{
-    return _url;
-}
-
-void VideoFile::setUrl(const QString &url)
-{
-    _url = url;
 }
 
 QString VideoFile::size() const

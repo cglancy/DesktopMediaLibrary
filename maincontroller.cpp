@@ -1,7 +1,9 @@
 #include "maincontroller.h"
 #include "treemodel.h"
 #include "listmodel.h"
-#include "filemanager.h"
+#include "downloadmanager.h"
+#include "mediafile.h"
+#include "videofile.h"
 
 #include <QRegExp>
 #include <QDesktopServices>
@@ -13,16 +15,19 @@ MainController::MainController(QObject *parent)
       _listModel(0),
       _fileManager(0)
 {
+    _fileManager = new DownloadManager(this);
     _treeModel = new TreeModel(this);
     _listModel = new ListModel(this);
-    _fileManager = new FileManager(this);
+
+    connect(_fileManager, &DownloadManager::downloadProgress, this, &MainController::downloadProgress);
+    connect(_fileManager, &DownloadManager::downloadFinished, this, &MainController::downloadFinished);
 }
 
 void MainController::loadData()
 {
     _treeModel->initWithFile("C:\\Test\\lds-media-library.xml");
+    _treeModel->initFileStates();
     _listModel->filterByCategory(_treeModel->rootCategory());
-
     _textIndex.build(_treeModel->videos());
 }
 
@@ -61,12 +66,44 @@ void MainController::clickVideoButton(const QString &url)
 {
     qDebug() << "MainController::clickVideoButton(" << url << ")";
 
-    FileManager::FileState state = _fileManager->fileState(url);
-    if (state == FileManager::NotDownloadedState)
-        _fileManager->downloadFile(url);
-    else if (state == FileManager::DownloadedState)
+    MediaFile *file = _treeModel->file(url);
+    if (file)
     {
-        QString fileUrl = "file:///" + _fileManager->localFilePath(url);
-        QDesktopServices::openUrl(fileUrl);
+        MediaFile::State state = file->state();
+
+        if (state == MediaFile::NotDownloadedState ||
+            state == MediaFile::DownloadingPausedState ||
+            state == MediaFile::DownloadErrorState)
+        {
+            _fileManager->downloadFile(file);
+        }
+        else if (state == MediaFile::DownloadingState)
+        {
+            _fileManager->cancelDownload(file);
+        }
+        else if (state == MediaFile::DownloadedState)
+        {
+            QString fileUrl = "file:///" + file->localFilePath();
+            QDesktopServices::openUrl(fileUrl);
+        }
+    }
+}
+
+void MainController::downloadFinished(MediaFile *file)
+{
+    VideoFile *videoFile = dynamic_cast<VideoFile*>(file);
+    if (videoFile)
+        _listModel->updateVideo(videoFile->video());
+}
+
+void MainController::downloadProgress(MediaFile *file, qint64 bytesReceived, qint64 bytesTotal)
+{
+    Q_UNUSED(bytesReceived);
+    Q_UNUSED(bytesTotal);
+
+    VideoFile *videoFile = dynamic_cast<VideoFile*>(file);
+    if (videoFile)
+    {
+        _listModel->updateVideo(videoFile->video());
     }
 }

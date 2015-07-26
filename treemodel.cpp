@@ -12,6 +12,7 @@
 #include <QUrl>
 #include <QDir>
 #include <QApplication>
+#include <QtConcurrent>
 #include <QDebug>
 
 TreeModel::TreeModel(QObject *parent)
@@ -54,6 +55,9 @@ void TreeModel::clear()
 		++i;
 	}
     _videoHash.clear();
+
+    _videoUrlHash.clear();
+    _fileUrlHash.clear();
 }
 
 CategoryNode * TreeModel::rootCategory() const
@@ -64,6 +68,16 @@ CategoryNode * TreeModel::rootCategory() const
 QList<Video*> TreeModel::videos() const
 {
     return _videoHash.values();
+}
+
+MediaFile * TreeModel::file(const QString &url) const
+{
+    return _fileUrlHash.value(url);
+}
+
+Video * TreeModel::video(const QString &url) const
+{
+    return _videoUrlHash.value(url);
 }
 
 void TreeModel::initWithFile(const QString &xmlFilename)
@@ -168,8 +182,28 @@ void TreeModel::initWithFile(const QString &xmlFilename)
     endResetModel();
 }
 
+void TreeModel::initFileState(MediaFile *file)
+{
+    if (QFile::exists(file->localFilePath()))
+        file->setState(MediaFile::DownloadedState);
+    else if (QFile::exists(file->localDownloadPath()))
+        file->setState(MediaFile::DownloadingPausedState);
+}
+
+void TreeModel::initFileStates()
+{
+    QList<MediaFile*> files = _fileUrlHash.values();
+#if 0
+    QtConcurrent::map(files, &TreeModel::initFileState);
+#else
+    foreach (MediaFile *file, files)
+        initFileState(file);
+#endif
+}
+
 bool TreeModel::parseLibrary(QXmlStreamReader& xml)
 {
+    Q_UNUSED(xml);
     //QXmlStreamAttributes attributes = xml.attributes();
 
     return true;
@@ -234,6 +268,8 @@ Video* TreeModel::parseVideo(QXmlStreamReader& xml)
     if (attributes.hasAttribute("videoUrl"))
         video->setVideoUrl(attributes.value("videoUrl").toString());
 
+    _videoUrlHash.insert(video->videoUrl(), video);
+
 	return video;
 }
 
@@ -270,6 +306,8 @@ void TreeModel::parseFile(QXmlStreamReader& xml, Video *video)
 
         if (attributes.hasAttribute("size"))
             file->setSize(attributes.value("size").toString());
+
+        _fileUrlHash.insert(file->url(), file);
     }
 }
 

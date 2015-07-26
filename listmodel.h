@@ -26,12 +26,15 @@ public:
         HighQualityFileUrlRole,
         HighQualityFileResolutionRole,
         HighQualityFileSizeRole,
+        HighQualityFileProgressImageRole,
         MediumQualityFileUrlRole,
         MediumQualityFileResolutionRole,
         MediumQualityFileSizeRole,
+        MediumQualityFileProgressImageRole,
         LowQualityFileUrlRole,
         LowQualityFileResolutionRole,
-        LowQualityFileSizeRole
+        LowQualityFileSizeRole,
+        LowQualityFileProgressImageRole
     };
 
 public:
@@ -50,10 +53,13 @@ public:
 	int columnCount(const QModelIndex &parent = QModelIndex()) const;
 	QVariant data(const QModelIndex &index, int role) const;
 
+    void updateVideo(Video *video);
+
 private:
     QString fileResolutionString(Video *video, Video::Quality quality) const;
     QString fileUrlString(Video *video, Video::Quality quality) const;
     QString fileSizeString(Video *video, Video::Quality quality) const;
+    QString fileProgressImage(Video *video, Video::Quality quality) const;
 
 private:
     CategoryNode *_filterCategory;

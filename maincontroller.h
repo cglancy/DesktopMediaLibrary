@@ -6,7 +6,8 @@
 
 class TreeModel;
 class ListModel;
-class FileManager;
+class DownloadManager;
+class MediaFile;
 
 class MainController : public QObject
 {
@@ -23,11 +24,15 @@ public:
     Q_INVOKABLE void setCategory(const QModelIndex &index);
     Q_INVOKABLE void clickVideoButton(const QString &url);
 
+private slots:
+    void downloadFinished(MediaFile *file);
+    void downloadProgress(MediaFile *file, qint64 bytesReceived, qint64 bytesTotal);
+
 private:
     TreeModel *_treeModel;
     ListModel *_listModel;
     TextIndex _textIndex;
-    FileManager *_fileManager;
+    DownloadManager *_fileManager;
 };
 
 #endif // MAINCONTROLLER_H

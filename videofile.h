@@ -1,11 +1,11 @@
 #ifndef VIDEOFILE_H
 #define VIDEOFILE_H
 
-#include <QString>
+#include "mediafile.h"
 
 class Video;
 
-class VideoFile
+class VideoFile : public MediaFile
 {
 public:
     enum Resolution
@@ -25,15 +25,11 @@ public:
     Video * video() const;
     Resolution resolution() const;
 
-    QString url() const;
-    void setUrl(const QString &url);
-
     QString size() const;
     void setSize(const QString &size);
 
 private:
     Video *_video;
-    QString _url;
     QString _size;
     Resolution _resolution;
 };

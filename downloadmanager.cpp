@@ -1,4 +1,5 @@
-#include "filemanager.h"
+#include "downloadmanager.h"
+#include "mediafile.h"
 #include "utility.h"
 
 #include <QNetworkAccessManager>
@@ -10,97 +11,77 @@
 #include <QSettings>
 #include <QUrl>
 
-#define DOWNLOADING_EXTENSION ".download"
 
-FileManager::FileManager(QObject *parent)
+DownloadManager::DownloadManager(QObject *parent)
 	: QObject(parent)
 {
 	_networkAccessManager = new QNetworkAccessManager(this);
-    _fileDirectory = Utility::currentVideoDirectory();
 }
 
-FileManager::~FileManager()
+DownloadManager::~DownloadManager()
 {
 
 }
 
-QString FileManager::fileDirectory() const
-{
-    return _fileDirectory;
-}
-
-void FileManager::setFileDirectory(const QString &dir)
-{
-    _fileDirectory = dir;
-}
-
-bool FileManager::isDownloading() const
+bool DownloadManager::isDownloading() const
 {
     return _downloadHash.size() > 0;
 }
 
-FileManager::FileState FileManager::fileState(const QString &url) const
+void DownloadManager::downloadFile(MediaFile *file)
 {
-    if (_downloadHash.contains(url))
-        return DownloadingState;
-
-    QString path = localFilePath(url);
-
-    if (QFileInfo::exists(path))
-        return DownloadedState;
-
-    path = localDownloadPath(url);
-
-    if (QFileInfo::exists(path))
-        return DownloadingPausedState;
-
-    return NotDownloadedState;
-}
-
-QString FileManager::localFilePath(const QString &url) const
-{
-    QUrl fileUrl(url);
-    return _fileDirectory + fileUrl.path();
-}
-
-QString FileManager::localDownloadPath(const QString &url) const
-{
-    return localFilePath(url) + DOWNLOADING_EXTENSION;
-}
-
-void FileManager::downloadFile(const QString &url)
-{
-    QString path = localDownloadPath(url);
-
-    if (!createPath(path))
-    {
-        qDebug() << "FileManager::downloadFile() Error: Unable to make directory path." << path;
+    if (file->state() == MediaFile::DownloadedState ||
+        file->state() == MediaFile::DownloadingState)
         return;
+
+    QString downloadPath = file->localDownloadPath();
+    QFileInfo fi(downloadPath);
+    qint64 fileSize = 0;
+
+    if (!fi.exists())
+    {
+        if (!createPath(downloadPath))
+        {
+            qDebug() << "FileManager::downloadFile() Error: Unable to make directory path." << downloadPath;
+            return;
+        }
+    }
+    else
+    {
+        fileSize = fi.size();
     }
 
-    QFile *downloadFile = new QFile(path);
+    QFile *downloadFile = new QFile(downloadPath);
     if (!downloadFile->open(QIODevice::WriteOnly | QIODevice::Append))
     {
-        qDebug() << "FileManager::downloadFile() Error: Unable to open file" << path;
+        qDebug() << "FileManager::downloadFile() Error: Unable to open file" << downloadPath;
         delete downloadFile;
         return;
     }
 
     QNetworkRequest request;
-    request.setUrl(QUrl(url));
+    request.setUrl(QUrl(file->url()));
+
+    if (fileSize > 0)
+    {
+        QString rangeStr = QString("bytes=%1-").arg(QString::number(fileSize));
+        request.setRawHeader("Range", rangeStr.toUtf8());
+    }
 
     QNetworkReply *reply = _networkAccessManager->get(request);
-    connect(reply, &QNetworkReply::finished, this, &FileManager::downloadFinished);
-    connect(reply, &QNetworkReply::downloadProgress, this, &FileManager::downloadProgress);
+    connect(reply, &QNetworkReply::finished, this, &DownloadManager::finished);
+    connect(reply, &QNetworkReply::downloadProgress, this, &DownloadManager::progress);
     connect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(error(QNetworkReply::NetworkError)));
 
-    DownloadData data(reply, downloadFile);
-    _downloadHash.insert(url, data);
+    DownloadData data(file, downloadFile);
+    _downloadHash.insert(reply, data);
 
-    qDebug() << "FileManager::downloadFile(" << url << ")";
+    file->setState(MediaFile::DownloadingState);
+
+    qDebug() << "FileManager::downloadFile(" << file->url() << ")";
 }
 
-bool FileManager::createPath(const QString &filePath)
+bool DownloadManager::createPath(const QString &filePath)
 {
     QFileInfo fileInfo(filePath);
     QString dirPath = fileInfo.absolutePath();
@@ -108,89 +89,113 @@ bool FileManager::createPath(const QString &filePath)
     return dir.mkpath(dirPath);
 }
 
-void FileManager::cancelDownload(const QString &url)
+void DownloadManager::cancelDownload(MediaFile *file)
 {
+    if (!file)
+        return;
 
+    auto i = _downloadHash.begin();
+    while (i != _downloadHash.end())
+    {
+        if (i.value().mediaFile == file)
+        {
+            i.key()->abort();
+            return;
+        }
+
+        i++;
+    }
 }
 
-void FileManager::cancelAllDownloads()
+void DownloadManager::cancelAllDownloads()
 {
-
+    auto i = _downloadHash.begin();
+    while (i != _downloadHash.end())
+    {
+        i.key()->abort();
+        i++;
+    }
 }
 
-void FileManager::readyRead()
+void DownloadManager::readyRead()
 {
     QNetworkReply *reply = static_cast<QNetworkReply*>(sender());
 
-    QFile *downloadFile = _downloadHash.value(reply->url().toString()).file;
+    QFile *downloadFile = _downloadHash.value(reply).file;
     if (downloadFile)
         downloadFile->write(reply->readAll());
 }
 
-void FileManager::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
-{
-    qDebug() << "FileManager::downloadProgress() received " << bytesReceived << " of " << bytesTotal;
-}
-
-void FileManager::downloadFinished()
+void DownloadManager::progress(qint64 bytesReceived, qint64 bytesTotal)
 {
     QNetworkReply *reply = static_cast<QNetworkReply*>(sender());
-    QString url = reply->url().toString();
-    DownloadData data = _downloadHash.value(url);
+    int percent = (int) 100 * (bytesReceived / (double) bytesTotal);
+    MediaFile *file = _downloadHash.value(reply).mediaFile;
+    if (file)
+        file->setProgress(percent);
+    emit downloadProgress(file, bytesReceived, bytesTotal);
+}
+
+void DownloadManager::finished()
+{
+    QNetworkReply *reply = static_cast<QNetworkReply*>(sender());
+    DownloadData data = _downloadHash.value(reply);
+    MediaFile *file = data.mediaFile;
+    QFile *downloadFile = data.file;
 
     if (reply->error() == QNetworkReply::NoError)
     {
-        QFile *downloadFile = data.file;
         if (downloadFile)
         {
             downloadFile->write(reply->readAll());
             downloadFile->flush();
             downloadFile->close();
-            QFile::rename(localDownloadPath(url), localFilePath(url));
+            QFile::rename(file->localDownloadPath(), file->localFilePath());
             delete downloadFile;
+
+            if (file)
+                file->setState(MediaFile::DownloadedState);
         }
 
-        emit fileDownloaded(url);
-        qDebug() << "FileManager::downloadFinished() for URL = " << url;
+        qDebug() << "FileManager::finished() for URL = " << file->url();
+    }
+    else if (reply->error() == QNetworkReply::OperationCanceledError)
+    {
+        if (downloadFile)
+        {
+            downloadFile->write(reply->readAll());
+            downloadFile->flush();
+            if (downloadFile->size() > 0)
+            {
+                file->setState(MediaFile::DownloadingPausedState);
+                //file->setBytesReceived(downloadFile()->size());
+            }
+            else
+            {
+                file->setState(MediaFile::NotDownloadedState);
+                //file->setBytesReceived(0);
+            }
+            downloadFile->close();
+            delete downloadFile;
+        }
     }
 
-    _downloadHash.remove(url);
+    emit downloadFinished(file);
+
+    _downloadHash.remove(reply);
     reply->deleteLater();
 }
 
-void FileManager::error(QNetworkReply::NetworkError code)
+void DownloadManager::error(QNetworkReply::NetworkError code)
 {
     Q_UNUSED(code);
 
     QNetworkReply *reply = static_cast<QNetworkReply*>(sender());
+
     qDebug() << "Network error: " << reply->errorString();
 }
 
 #if 0
-void FileManager::downloadFile(RemoteFile *file)
-{
-	Q_ASSERT(file);
-	if (!file)
-		return;
-
-    if (!proceedWithDownload(file))
-        return;
-
-    QNetworkRequest request;
-    request.setUrl(QUrl(file->url()));
-    request.setRawHeader("User-Agent", _userAgentStr);
-
-	QNetworkReply *reply = _networkAccessManager->get(request);
-	connect(reply, SIGNAL(finished()), this, SLOT(fileFinished()));
-	connect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(error(QNetworkReply::NetworkError)));
-
-	file->setFileSize(0);
-	file->setState(RemoteFile::DownloadingState);
-
-	_videoThumbReplyMap.insert(reply, file);
-
-	qDebug("Start download %s", file->url().toLocal8Bit().data());
-}
 
 bool FileManager::proceedWithDownload(RemoteFile *file)
 {
@@ -248,37 +253,6 @@ bool FileManager::proceedWithDownload(RemoteFile *file)
     }
 
     return true;
-}
-
-void FileManager::fileFinished()
-{
-	QNetworkReply *reply = static_cast<QNetworkReply*>(sender());
-
-	if (_videoThumbReplyMap.contains(reply))
-	{
-		RemoteFile *file = _videoThumbReplyMap.value(reply);
-		_videoThumbReplyMap.remove(reply);
-
-		if (!file)
-			return;
-
-		if (reply->error() == QNetworkReply::NoError)
-		{
-			writeFile(file->localPath(), reply->readAll());
-			file->setState(RemoteFile::DownloadedState);
-			emit fileDownloaded(file);
-
-			qDebug("Downloaded %s", file->fileName().toLocal8Bit().data());
-		}
-		else
-		{
-			file->setState(RemoteFile::DownloadErrorState);
-			file->setErrorMessage(reply->errorString());
-			emit fileDownloaded(file);
-		}
-	}
-
-	reply->deleteLater();
 }
 
 void FileManager::downloadVideo(RemoteFile *file)

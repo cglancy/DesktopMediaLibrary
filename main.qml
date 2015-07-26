@@ -28,7 +28,7 @@ ApplicationWindow {
             Item { Layout.fillWidth: true }
             TextField {
                 id: searchField
-                width: 300
+                Layout.minimumWidth: 200
                 placeholderText: "Search"
                 onTextChanged: controller.search(text)
             }
@@ -49,6 +49,10 @@ ApplicationWindow {
             Layout.fillWidth: true
             alternatingRowColors: false
             model: treeModel
+            onActivated: {
+                searchField.text = ""
+                controller.setCategory(index)
+            }
             onClicked: {
                 searchField.text = ""
                 controller.setCategory(index)
@@ -78,21 +82,21 @@ ApplicationWindow {
                                 qualityText: highQualityFileResolution
                                 sizeText: highQualityFileSize
                                 url: highQualityFileUrl
-                                imageSource: onlineOnly ? "" : "images/download_24x24.png"
+                                imageSource: onlineOnly ? "" : highQualityFileProgressImage
                                 onClicked: controller.clickVideoButton(highQualityFileUrl)
                             }
                             VideoFileButton {
                                 qualityText: onlineOnly ? "" : mediumQualityFileResolution
                                 sizeText: mediumQualityFileSize
                                 url: mediumQualityFileUrl
-                                imageSource: mediumQualityFileUrl ? "images/download_24x24.png" : ""
+                                imageSource: mediumQualityFileProgressImage
                                 onClicked: controller.clickVideoButton(mediumQualityFileUrl)
                             }
                             VideoFileButton {
                                 qualityText: onlineOnly ? "" : lowQualityFileResolution
                                 sizeText: lowQualityFileSize
                                 url: lowQualityFileUrl
-                                imageSource: lowQualityFileUrl ? "images/download_24x24.png" : ""
+                                imageSource: lowQualityFileProgressImage
                                 onClicked: controller.clickVideoButton(lowQualityFileUrl)
                             }
                         }
