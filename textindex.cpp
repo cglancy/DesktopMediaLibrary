@@ -43,7 +43,7 @@ void TextIndex::build(const QList<Video*> videos)
 
 QStringList TextIndex::words(const QString &str) const
 {
-    return str.split(QRegExp("[\\s\\:,;\"\\(\\)#\\?!“”]"), QString::SkipEmptyParts);
+    return str.split(QRegExp("[\\s\\:\\.,;\"\\(\\)#\\?!“”]"), QString::SkipEmptyParts);
 }
 
 QStringList TextIndex::words(const QList<CategoryNode*> &categories) const

@@ -265,7 +265,7 @@ QString ListModel::fileProgressImage(Video *video, Video::Quality quality) const
     if (!file)
         return str;
 
-    str = "image://progress/" + ProgressImageProvider::imageName(file->state(), file->progress());
+    str = "image://progress/" + ProgressImageProvider::imageName(file->state(), file->percentComplete());
 
     return str;
 }

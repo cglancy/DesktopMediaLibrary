@@ -33,21 +33,29 @@ public:
     State state() const;
     void setState(State state);
 
-    int progress() const;
-    void setProgress(int percent);
-
     QString downloadError() const;
     void setDownloadError(const QString &error);
 
     QString localFilePath() const;
     QString localDownloadPath() const;
 
+    qint64 fileSize() const;
+    void setFileSize(qint64 sizeBytes);
+
+    qint64 bytesReceived() const;
+    void setBytesReceived(qint64 bytesReceived);
+
+    qint64 bytesResumed() const;
+    void setBytesResumed(qint64 bytesResumed);
+
+    int percentComplete() const;
+
 private:
     Type _type;
     QString _url;
     State _state;
-    int _progress;
     QString _downloadError;
+    qint64 _size, _bytesReceived, _bytesResumed;
 };
 
 #endif // MEDIAFILE_H

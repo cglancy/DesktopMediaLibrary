@@ -5,7 +5,10 @@
 
 MediaFile::MediaFile(MediaFile::Type type)
     : _type(type),
-      _state(NotDownloadedState)
+      _state(NotDownloadedState),
+      _size(0),
+      _bytesReceived(0),
+      _bytesResumed(0)
 {
 
 }
@@ -40,16 +43,6 @@ void MediaFile::setUrl(const QString &url)
     _url = url;
 }
 
-int MediaFile::progress() const
-{
-    return _progress;
-}
-
-void MediaFile::setProgress(int percent)
-{
-    _progress = percent;
-}
-
 QString MediaFile::downloadError() const
 {
     return _downloadError;
@@ -69,4 +62,42 @@ QString MediaFile::localFilePath() const
 QString MediaFile::localDownloadPath() const
 {
     return localFilePath() + ".download";
+}
+
+qint64 MediaFile::fileSize() const
+{
+    return _size;
+}
+
+void MediaFile::setFileSize(qint64 sizeBytes)
+{
+    _size = sizeBytes;
+}
+
+qint64 MediaFile::bytesReceived() const
+{
+    return _bytesReceived;
+}
+
+void MediaFile::setBytesReceived(qint64 bytesReceived)
+{
+    _bytesReceived = bytesReceived;
+}
+
+qint64 MediaFile::bytesResumed() const
+{
+    return _bytesResumed;
+}
+
+void MediaFile::setBytesResumed(qint64 bytesResumed)
+{
+    _bytesResumed = bytesResumed;
+}
+
+int MediaFile::percentComplete() const
+{
+    int percent = 0;
+    if (_size > 0)
+        percent = (int) (_bytesReceived * 100. / _size);
+    return percent;
 }
