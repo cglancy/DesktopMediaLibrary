@@ -42,10 +42,24 @@ ApplicationWindow {
         TreeView {
             TableViewColumn {
                 title: "Category"
-                role: "display"
+                role: "name"
                 width: 300
             }
-
+            TableViewColumn {
+                title: "High Quality"
+                role: "highQualitySize"
+                width: 100
+            }
+            TableViewColumn {
+                title: "Medium Quality"
+                role: "mediumQualitySize"
+                width: 100
+            }
+            TableViewColumn {
+                title: "Low Quality"
+                role: "lowQualitySize"
+                width: 100
+            }
             Layout.fillWidth: true
             alternatingRowColors: false
             model: treeModel

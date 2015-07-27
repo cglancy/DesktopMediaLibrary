@@ -14,6 +14,17 @@ class QXmlStreamReader;
 class TreeModel : public QAbstractItemModel
 {
     Q_OBJECT
+public:
+    enum Role
+    {
+        NameRole = Qt::UserRole + 1,
+        HighQualitySizeRole,
+        HighQualityExportRole,
+        MediumQualitySizeRole,
+        MediumQualityExportRole,
+        LowQualitySizeRole,
+        LowQualityExportRole
+    };
 
 public:
     TreeModel(QObject *parent);
@@ -32,6 +43,7 @@ public:
     QModelIndex index(CategoryNode *category) const;
     CategoryNode * category(const QModelIndex &index) const;
 
+    QHash<int, QByteArray> roleNames() const;
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
     QModelIndex parent(const QModelIndex &index) const;
     int rowCount(const QModelIndex &parent = QModelIndex()) const;

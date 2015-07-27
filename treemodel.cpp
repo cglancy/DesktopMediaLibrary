@@ -390,6 +390,19 @@ QVariant TreeModel::headerData(int section, Qt::Orientation orientation, int rol
     return QVariant();
 }
 
+QHash<int, QByteArray> TreeModel::roleNames() const
+{
+    QHash<int, QByteArray> roles;
+    roles[NameRole] = "name";
+    roles[HighQualitySizeRole] = "highQualitySize";
+    roles[HighQualityExportRole] = "highQualityExport";
+    roles[MediumQualitySizeRole] = "mediumQualitySize";
+    roles[MediumQualityExportRole] = "mediumQualityExport";
+    roles[LowQualitySizeRole] = "lowQualitySize";
+    roles[LowQualityExportRole] = "lowQualityExport";
+    return roles;
+}
+
 QVariant TreeModel::data(const QModelIndex &index, int role) const
 {
     QVariant v;
@@ -401,15 +414,8 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const
     if (!node)
         return v;
 
-    if (role == Qt::DisplayRole || role == Qt::ToolTipRole)
-    {
-        if (index.column() == 0)
-            v = QVariant(node->name());
-    }
-    else if (index.column() == 0 && role == Qt::DecorationRole)
-    {
-		v = QVariant(_folderPixmap);
-    }
+    if (role == NameRole)
+        v = QVariant(node->name());
 
     return v;
 }
