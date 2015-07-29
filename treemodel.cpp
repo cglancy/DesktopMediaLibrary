@@ -436,8 +436,10 @@ QString TreeModel::stripUrlQuery(const QString &urlStr)
 
 void TreeModel::updateCategory(CategoryNode *category)
 {
-    updateParent(category);
-    updateChildren(category);
+    Q_UNUSED(category);
+    //updateParent(category);
+    //updateChildren(category);
+    updateAll(_rootCategory);
 }
 
 void TreeModel::updateParent(CategoryNode *category)
@@ -467,4 +469,16 @@ void TreeModel::updateChildren(CategoryNode *category)
         foreach (CategoryNode *child, category->categories())
             updateChildren(child);
     }
+}
+
+void TreeModel::updateAll(CategoryNode *category)
+{
+    if (!category)
+        category = _rootCategory;
+
+    QModelIndex categoryIndex = index(category);
+    emit dataChanged(categoryIndex, categoryIndex);
+
+    foreach (CategoryNode *childCategory, category->categories())
+        updateAll(childCategory);
 }

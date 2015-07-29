@@ -1,5 +1,6 @@
 import QtQuick 2.3
 import QtQuick.Controls 1.4
+import QtQuick.Controls.Styles 1.2
 import QtQuick.Layouts 1.1
 
 ApplicationWindow {
@@ -8,24 +9,59 @@ ApplicationWindow {
     height: 768
     title: qsTr("Desktop Media Library")
 
-    menuBar: MenuBar {
-        Menu {
-            title: qsTr("File")
-            MenuItem {
-                text: qsTr("&Open")
-                onTriggered: console.log("Open action triggered");
-            }
-            MenuItem {
-                text: qsTr("Exit")
-                onTriggered: Qt.quit();
-            }
-        }
-    }
+    //    menuBar: MenuBar {
+    //        Menu {
+    //            title: qsTr("File")
+    //            MenuItem {
+    //                text: qsTr("&Open")
+    //                onTriggered: console.log("Open action triggered");
+    //            }
+    //            MenuItem {
+    //                text: qsTr("Exit")
+    //                onTriggered: Qt.quit();
+    //            }
+    //        }
+    //    }
 
     toolBar: ToolBar {
+
+        style: ToolBarStyle {
+            background: Rectangle {
+                //border.color: "#313131"
+                gradient: Gradient {
+                    GradientStop { position: 0 ; color: "#828282" }
+                    GradientStop { position: 1 ; color: "#404040" }
+                }
+            }
+        }
+
         RowLayout {
             anchors.fill: parent
-            Item { Layout.fillWidth: true }
+
+            ToolButton {
+                id: gearButton
+                text: "Options"
+                tooltip: "Change application options"
+                iconSource: "gear.png"
+                onClicked: console.log("options")
+            }
+
+            ToolButton {
+                id: exportButton
+                checkable: true
+                text: "Export"
+                tooltip: "Exports video files"
+                iconSource: "export.png"
+                onClicked: {
+                    if (exportButton.checked)
+                        exportColumn.visible = true
+                    else
+                        exportColumn.visible = false
+                }
+            }
+            Item {
+                Layout.fillWidth: true
+            }
             TextField {
                 id: searchField
                 Layout.minimumWidth: 200
@@ -39,32 +75,42 @@ ApplicationWindow {
         id: checkBoxDelegate
         Item {
             CheckBox {
+                id: checkBox
                 anchors.fill: parent
                 checkedState: styleData.value
                 //partiallyCheckedEnabled: true
                 onClicked: {
-                    if (styleData.value === 1)
-                        styleData.value = 2
-                    controller.setCategoryExport(styleData.index, styleData.value)
+                    controller.setCategoryExport(styleData.index, checkBox.checkedState)
                 }
             }
         }
     }
 
+
     SplitView {
-        anchors.fill: parent
+        id: splitView
+        width: parent.width
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: exportPanel.top
+
         orientation: Qt.Horizontal
 
         TreeView {
+            id: treeView
+
             TableViewColumn {
                 title: "Category"
                 role: "name"
                 width: 300
             }
             TableViewColumn {
+                id: exportColumn
+                visible: false
                 title: "Export"
                 role: "export"
-                width: 100
+                width: 50
                 delegate: checkBoxDelegate
             }
 
@@ -82,7 +128,6 @@ ApplicationWindow {
         }
         ScrollView {
             Layout.minimumWidth: 640
-
             Layout.fillHeight: true
             ListView {
                 anchors.fill: parent
@@ -165,4 +210,15 @@ ApplicationWindow {
             }
         }
     }
+
+    ExportPanel {
+        id: exportPanel
+
+        width: parent.width
+        height: 0
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+    }
+
 }

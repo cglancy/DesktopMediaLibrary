@@ -8,6 +8,7 @@
 
 #include <QRegExp>
 #include <QDesktopServices>
+#include <QTimer>
 #include <QDebug>
 
 MainController::MainController(QObject *parent)
@@ -19,9 +20,11 @@ MainController::MainController(QObject *parent)
     _fileManager = new DownloadManager(this);
     _treeModel = new TreeModel(this);
     _listModel = new ListModel(this);
+    _timer = new QTimer(this);
 
     connect(_fileManager, &DownloadManager::downloadProgress, this, &MainController::downloadProgress);
     connect(_fileManager, &DownloadManager::downloadFinished, this, &MainController::downloadFinished);
+    connect(_timer, &QTimer::timeout, this, &MainController::updateTree);
 }
 
 void MainController::loadData()
@@ -111,10 +114,17 @@ void MainController::downloadProgress(MediaFile *file, qint64 bytesReceived, qin
 
 void MainController::setCategoryExport(const QModelIndex &index, int value)
 {
+    qDebug() << "MainController::setCategoryExport, value = " << value;
     CategoryNode *category = _treeModel->category(index);
     if (category)
     {
         category->setExport(value == Qt::Checked ? true : false);
-        _treeModel->updateCategory(category);
+        //_treeModel->updateCategory(category);
+        _timer->start(500);
     }
+}
+
+void MainController::updateTree()
+{
+    _treeModel->updateAll();
 }

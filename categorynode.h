@@ -36,7 +36,8 @@ public:
     ExportState exportState() const;
 
 private:
-    void updateExportState();
+    void propogateExportDown(bool exportState);
+    void propogateExportUp(ExportState childState);
 
 private:
     CategoryNode *_parent;

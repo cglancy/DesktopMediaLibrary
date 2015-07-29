@@ -81,40 +81,52 @@ CategoryNode::ExportState CategoryNode::exportState() const
 
 void CategoryNode::setExport(bool exportState)
 {
-    _exportState = exportState ? YesState: NoState;
-
-    // 1. Set all child states equal to export states.
-    foreach (CategoryNode *category, _categoryList)
-        category->setExport(exportState);
+    // 1. Set all child states equal to parent export state.
+    propogateExportDown(exportState);
 
     // 2. Update states for all ancestors.
     if (_parent)
-        _parent->updateExportState();
+        _parent->propogateExportUp(_exportState);
 }
 
-void CategoryNode::updateExportState()
+void CategoryNode::propogateExportDown(bool exportState)
 {
-    int yesCount = 0;
-    int noCount = 0;
+    _exportState = exportState ? YesState: NoState;
 
     foreach (CategoryNode *category, _categoryList)
-    {
-        ExportState childState = category->exportState();
+        category->propogateExportDown(exportState);
+}
 
-        if (childState == YesState)
-            yesCount++;
-        else if (childState == NoState)
-            noCount++;
+void CategoryNode::propogateExportUp(ExportState childState)
+{
+    if (childState == MixedState)
+    {
+        _exportState = MixedState;
+    }
+    else
+    {
+        int yesCount = 0;
+        int noCount = 0;
+
+        foreach (CategoryNode *category, _categoryList)
+        {
+            ExportState childState = category->exportState();
+
+            if (childState == YesState)
+                yesCount++;
+            else if (childState == NoState)
+                noCount++;
+        }
+
+        if (yesCount == _categoryList.count())
+            _exportState = YesState;
+        else if (noCount == _categoryList.count())
+            _exportState = NoState;
+        else
+            _exportState = MixedState;
     }
 
-    if (yesCount == _categoryList.count())
-        _exportState = YesState;
-    else if (noCount == _categoryList.count())
-        _exportState = NoState;
-    else
-        _exportState = MixedState;
-
     if (_parent)
-        _parent->updateExportState();
+        _parent->propogateExportUp(_exportState);
 }
 

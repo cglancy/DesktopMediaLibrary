@@ -51,6 +51,7 @@ public:
     void updateCategory(CategoryNode *category);
     void updateParent(CategoryNode *parent);
     void updateChildren(CategoryNode *category);
+    void updateAll(CategoryNode *category = 0);
 
 private:
     CategoryNode* parseCategory(QXmlStreamReader& xml, CategoryNode *parent);
