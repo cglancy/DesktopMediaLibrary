@@ -10,6 +10,14 @@ class Video;
 class CategoryNode
 {
 public:
+    enum ExportState
+    {
+        NoState     = 0,
+        MixedState  = 1,
+        YesState    = 2
+    };
+
+public:
     CategoryNode(CategoryNode *parent);
     ~CategoryNode();
 
@@ -24,11 +32,18 @@ public:
     void addCategory(CategoryNode *category);
     void addVideo(Video *video);
 
+    void setExport(bool exportState);
+    ExportState exportState() const;
+
+private:
+    void updateExportState();
+
 private:
     CategoryNode *_parent;
     QString _name;
     QList<CategoryNode*> _categoryList;
     QList<Video*> _videoList;
+    ExportState _exportState;
 };
 
 #endif // CATEGORY_H

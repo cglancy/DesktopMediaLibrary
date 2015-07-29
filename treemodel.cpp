@@ -18,19 +18,6 @@
 TreeModel::TreeModel(QObject *parent)
     : QAbstractItemModel(parent), _rootCategory(0)
 {
-    _folderPixmap = QPixmap(":/pvm/images/video_folder_16.png");
-
-    _smallCategoryPixmap = QPixmap(":/pvm/images/video_folder_48.png");
-    _mediumCategoryPixmap = QPixmap(":/pvm/images/video_folder_128.png");
-    _largeCategoryPixmap = QPixmap(":/pvm/images/video_folder_256.png");
-
-    _smallVideoPixmap = QPixmap(":/pvm/images/video_48.png");
-    _mediumVideoPixmap = QPixmap(":/pvm/images/video_128.png");
-    _largeVideoPixmap = QPixmap(":/pvm/images/video_256.png");
-
-    _smallAudioPixmap = QPixmap(":/pvm/images/audio_48.png");
-    _mediumAudioPixmap = QPixmap(":/pvm/images/audio_128.png");
-    _largeAudioPixmap = QPixmap(":/pvm/images/audio_256.png");
 }
 
 TreeModel::~TreeModel()
@@ -96,16 +83,12 @@ void TreeModel::initWithFile(const QString &xmlFilename)
         return;
     }
 
-	_videoDirectory = Utility::currentVideoDirectory();
-	_mediaDirectory = _videoDirectory;
-	_thumbnailDirectory = _mediaDirectory + "/thumbnails";
-
     QXmlStreamReader xml(file);
-	QStack<CategoryNode*> nodeStack;
+    QStack<CategoryNode*> categoryState;
 	Video *currentVideo = 0;
 
     _rootCategory = new CategoryNode(0);
-    nodeStack.push(_rootCategory);
+    categoryState.push(_rootCategory);
 
     while (!xml.atEnd() && !xml.hasError()) 
     {
@@ -123,12 +106,12 @@ void TreeModel::initWithFile(const QString &xmlFilename)
 			}
 			else if (xml.name() == "category") 
 			{
-                CategoryNode *category = parseCategory(xml, nodeStack.top());
-                nodeStack.push(category);
+                CategoryNode *category = parseCategory(xml, categoryState.top());
+                categoryState.push(category);
 			}
 			else if (xml.name() == "videoref")
 			{
-				parseVideoRef(xml, nodeStack.top());
+                parseVideoRef(xml, categoryState.top());
 			}
             else if (xml.name() == "video")
             {
@@ -142,7 +125,7 @@ void TreeModel::initWithFile(const QString &xmlFilename)
 		else if (token == QXmlStreamReader::EndElement)
 		{
 			if (xml.name() == "category")
-				nodeStack.pop();
+                categoryState.pop();
 		}
     }
 
@@ -221,24 +204,24 @@ bool TreeModel::createDirectory(const QString &dirPath)
 
 CategoryNode* TreeModel::parseCategory(QXmlStreamReader& xml, CategoryNode *parent)
 {
-    CategoryNode *node = new CategoryNode(parent);
+    CategoryNode *category = new CategoryNode(parent);
 
 	QXmlStreamAttributes attributes = xml.attributes();
 
 	if (attributes.hasAttribute("name")) 
-		node->setName(attributes.value("name").toString());
+        category->setName(attributes.value("name").toString());
 
-	return node;
+    return category;
 }
 
-void TreeModel::parseVideoRef(QXmlStreamReader& xml, CategoryNode *node)
+void TreeModel::parseVideoRef(QXmlStreamReader& xml, CategoryNode *category)
 {
 	QXmlStreamAttributes attributes = xml.attributes();
 
     if (attributes.hasAttribute("ref"))
 	{	
         QString ref = attributes.value("ref").toString();
-		_refList.append(QPair<CategoryNode*, QString>(node, ref));
+        _refList.append(QPair<CategoryNode*, QString>(category, ref));
 	}
 }
 
@@ -311,9 +294,9 @@ void TreeModel::parseFile(QXmlStreamReader& xml, Video *video)
     }
 }
 
-QModelIndex TreeModel::index(CategoryNode *node) const
+QModelIndex TreeModel::index(CategoryNode *category) const
 {
-    return createIndex(node->row(), 0, node);
+    return createIndex(category->row(), 0, category);
 }
 
 CategoryNode * TreeModel::category(const QModelIndex &index) const
@@ -323,19 +306,19 @@ CategoryNode * TreeModel::category(const QModelIndex &index) const
 
 QModelIndex TreeModel::index(int row, int column, const QModelIndex &parent) const
 {
-	if (!hasIndex(row, column, parent))
-		return QModelIndex();
+//	if (!hasIndex(row, column, parent))
+//		return QModelIndex();
 
-	CategoryNode *parentNode;
+    CategoryNode *parentCategory;
 
 	if (!parent.isValid())
-        parentNode = _rootCategory;
+        parentCategory = _rootCategory;
 	else
-		parentNode = static_cast<CategoryNode*>(parent.internalPointer());
+        parentCategory = static_cast<CategoryNode*>(parent.internalPointer());
 
-    CategoryNode *childNode = parentNode->categories().at(row);
-	if (childNode)
-		return createIndex(row, column, childNode);
+    CategoryNode *childCategory = parentCategory->categories().at(row);
+    if (childCategory)
+        return createIndex(row, column, childCategory);
 	else
 		return QModelIndex();
 }
@@ -345,28 +328,28 @@ QModelIndex TreeModel::parent(const QModelIndex &index ) const
 	if (!index.isValid())
 		return QModelIndex();
 
-	CategoryNode *childNode = static_cast<CategoryNode*>(index.internalPointer());
-	CategoryNode *parentNode = childNode->parent();
+    CategoryNode *childCategory = static_cast<CategoryNode*>(index.internalPointer());
+    CategoryNode *parentCategory = childCategory->parent();
 
-    if (parentNode == _rootCategory || parentNode == 0)
+    if (parentCategory == _rootCategory || parentCategory == 0)
 		return QModelIndex();
 
-	return createIndex(parentNode->row(), 0, parentNode);
+    return createIndex(parentCategory->row(), 0, parentCategory);
 }
 
 int TreeModel::rowCount(const QModelIndex &parent) const
 {
-	CategoryNode *parentNode;
+    CategoryNode *parentCategory;
 	if (parent.column() > 0)
 		return 0;
 
 	if (!parent.isValid())
-        parentNode = _rootCategory;
+        parentCategory = _rootCategory;
 	else
-		parentNode = static_cast<CategoryNode*>(parent.internalPointer());
+        parentCategory = static_cast<CategoryNode*>(parent.internalPointer());
 
-	if (parentNode)
-        return parentNode->categories().size();
+    if (parentCategory)
+        return parentCategory->categories().size();
 
 	return 0;
 }
@@ -394,12 +377,7 @@ QHash<int, QByteArray> TreeModel::roleNames() const
 {
     QHash<int, QByteArray> roles;
     roles[NameRole] = "name";
-    roles[HighQualitySizeRole] = "highQualitySize";
-    roles[HighQualityExportRole] = "highQualityExport";
-    roles[MediumQualitySizeRole] = "mediumQualitySize";
-    roles[MediumQualityExportRole] = "mediumQualityExport";
-    roles[LowQualitySizeRole] = "lowQualitySize";
-    roles[LowQualityExportRole] = "lowQualityExport";
+    roles[ExportRole] = "export";
     return roles;
 }
 
@@ -410,12 +388,14 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const
     if (!index.isValid())
         return v;
 
-    CategoryNode *node = static_cast<CategoryNode*>(index.internalPointer());
-    if (!node)
+    CategoryNode *category = static_cast<CategoryNode*>(index.internalPointer());
+    if (!category)
         return v;
 
     if (role == NameRole)
-        v = QVariant(node->name());
+        v = QVariant(category->name());
+    else if (role == ExportRole)
+        v = QVariant((int) category->exportState());
 
     return v;
 }
@@ -424,8 +404,26 @@ Qt::ItemFlags TreeModel::flags(const QModelIndex &index) const
 {
 	Q_UNUSED(index);
 
-    Qt::ItemFlags f = Qt::ItemIsSelectable |  Qt::ItemIsEnabled; 
+    Qt::ItemFlags f = Qt::ItemIsSelectable |  Qt::ItemIsEnabled | Qt::ItemIsEditable;
     return f;
+}
+
+bool TreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    bool success = false;
+
+    CategoryNode *category = static_cast<CategoryNode*>(index.internalPointer());
+    if (!category)
+        return success;
+
+    if (role == ExportRole)
+    {
+        category->setExport(value.toInt() == 2);
+        dataChanged(index, index);
+        success = true;
+    }
+
+    return success;
 }
 
 QString TreeModel::stripUrlQuery(const QString &urlStr)
@@ -436,3 +434,37 @@ QString TreeModel::stripUrlQuery(const QString &urlStr)
     return stripStr;
 }
 
+void TreeModel::updateCategory(CategoryNode *category)
+{
+    updateParent(category);
+    updateChildren(category);
+}
+
+void TreeModel::updateParent(CategoryNode *category)
+{
+    QVector<int> roles;
+    roles.append(ExportRole);
+
+    QModelIndex categoryIndex = index(category);
+    emit dataChanged(categoryIndex, categoryIndex, roles);
+
+    CategoryNode *parent = category->parent();
+    if (parent)
+        updateParent(parent);
+}
+
+void TreeModel::updateChildren(CategoryNode *category)
+{
+    if (category->categories().size() > 0)
+    {
+        QVector<int> roles;
+        roles.append(ExportRole);
+
+        QModelIndex firstIndex = index(category->categories().first());
+        QModelIndex lastIndex = index(category->categories().last());
+        emit dataChanged(firstIndex, lastIndex, roles);
+
+        foreach (CategoryNode *child, category->categories())
+            updateChildren(child);
+    }
+}

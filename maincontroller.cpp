@@ -4,6 +4,7 @@
 #include "downloadmanager.h"
 #include "mediafile.h"
 #include "videofile.h"
+#include "categorynode.h"
 
 #include <QRegExp>
 #include <QDesktopServices>
@@ -105,5 +106,15 @@ void MainController::downloadProgress(MediaFile *file, qint64 bytesReceived, qin
     if (videoFile)
     {
         _listModel->updateVideo(videoFile->video());
+    }
+}
+
+void MainController::setCategoryExport(const QModelIndex &index, int value)
+{
+    CategoryNode *category = _treeModel->category(index);
+    if (category)
+    {
+        category->setExport(value == Qt::Checked ? true : false);
+        _treeModel->updateCategory(category);
     }
 }

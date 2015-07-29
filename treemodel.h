@@ -18,12 +18,7 @@ public:
     enum Role
     {
         NameRole = Qt::UserRole + 1,
-        HighQualitySizeRole,
-        HighQualityExportRole,
-        MediumQualitySizeRole,
-        MediumQualityExportRole,
-        LowQualitySizeRole,
-        LowQualityExportRole
+        ExportRole
     };
 
 public:
@@ -51,6 +46,11 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
     QVariant data(const QModelIndex &index, int role) const;
     Qt::ItemFlags flags(const QModelIndex &index) const;
+    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
+
+    void updateCategory(CategoryNode *category);
+    void updateParent(CategoryNode *parent);
+    void updateChildren(CategoryNode *category);
 
 private:
     CategoryNode* parseCategory(QXmlStreamReader& xml, CategoryNode *parent);
@@ -68,11 +68,6 @@ private:
     QHash<QString, Video*> _videoUrlHash;
     QHash<QString, MediaFile*> _fileUrlHash;
     QList<QPair<CategoryNode*, QString> > _refList;
-	QString _videoDirectory, _mediaDirectory, _thumbnailDirectory;
-    QPixmap _folderPixmap;
-    QPixmap _smallCategoryPixmap, _mediumCategoryPixmap, _largeCategoryPixmap;
-    QPixmap _smallAudioPixmap, _mediumAudioPixmap, _largeAudioPixmap;
-    QPixmap _smallVideoPixmap, _mediumVideoPixmap, _largeVideoPixmap;
 };
 
 #endif // TREEMODEL_H

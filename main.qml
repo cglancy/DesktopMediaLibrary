@@ -35,6 +35,22 @@ ApplicationWindow {
         }
     }
 
+    Component {
+        id: checkBoxDelegate
+        Item {
+            CheckBox {
+                anchors.fill: parent
+                checkedState: styleData.value
+                //partiallyCheckedEnabled: true
+                onClicked: {
+                    if (styleData.value === 1)
+                        styleData.value = 2
+                    controller.setCategoryExport(styleData.index, styleData.value)
+                }
+            }
+        }
+    }
+
     SplitView {
         anchors.fill: parent
         orientation: Qt.Horizontal
@@ -46,20 +62,12 @@ ApplicationWindow {
                 width: 300
             }
             TableViewColumn {
-                title: "High Quality"
-                role: "highQualitySize"
+                title: "Export"
+                role: "export"
                 width: 100
+                delegate: checkBoxDelegate
             }
-            TableViewColumn {
-                title: "Medium Quality"
-                role: "mediumQualitySize"
-                width: 100
-            }
-            TableViewColumn {
-                title: "Low Quality"
-                role: "lowQualitySize"
-                width: 100
-            }
+
             Layout.fillWidth: true
             alternatingRowColors: false
             model: treeModel

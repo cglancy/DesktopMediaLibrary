@@ -22,6 +22,7 @@ public:
 
     Q_INVOKABLE void search(const QString &text);
     Q_INVOKABLE void setCategory(const QModelIndex &index);
+    Q_INVOKABLE void setCategoryExport(const QModelIndex &index, int value);
     Q_INVOKABLE void clickVideoButton(const QString &url);
 
 private slots:
