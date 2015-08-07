@@ -2,8 +2,8 @@
     <qresource prefix="/">
         <file>main.qml</file>
         <file>VideoFileButton.qml</file>
-        <file>export.png</file>
-        <file>gear.png</file>
         <file>ExportPanel.qml</file>
+        <file>export_dark.png</file>
+        <file>gear_dark.png</file>
     </qresource>
 </RCC>

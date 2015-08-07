@@ -263,3 +263,11 @@ void Utility::setFolderThumbnailName(FolderThumbnailName name)
     QSettings settings;
     settings.setValue(Utility::FolderThumbnailNameKey, static_cast<int>(name));
 }
+
+bool Utility::createPath(const QString &filePath)
+{
+    QFileInfo fileInfo(filePath);
+    QString dirPath = fileInfo.absolutePath();
+    QDir dir(dirPath);
+    return dir.mkpath(dirPath);
+}

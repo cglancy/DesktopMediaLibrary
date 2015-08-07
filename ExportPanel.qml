@@ -5,10 +5,25 @@ import QtQuick.Layouts 1.1
 
 Rectangle {
 
+    SystemPalette {
+        id: palette
+        colorGroup: SystemPalette.Active
+    }
+
+    color: palette.window
+
     Row {
         Column {
-            Button {
-                text: "Browse..."
+            Row {
+                Text {
+                    text: "Destination Folder"
+                }
+                TextField {
+                    width: 100
+                }
+                Button {
+                    text: "Browse..."
+                }
             }
             Button {
                 text: "Export"
@@ -16,10 +31,10 @@ Rectangle {
         }
     }
 
-    gradient: Gradient {
-        GradientStop { position: 0 ; color: "#828282" }
-        GradientStop { position: 1 ; color: "#404040" }
-    }
+//    gradient: Gradient {
+//        GradientStop { position: 0 ; color: "#828282" }
+//        GradientStop { position: 1 ; color: "#404040" }
+//    }
 
     states: [
         State {

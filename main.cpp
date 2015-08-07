@@ -6,6 +6,7 @@
 #include "treemodel.h"
 #include "listmodel.h"
 #include "progressimageprovider.h"
+#include "thumbnailimageprovider.h"
 
 int main(int argc, char *argv[])
 {
@@ -19,7 +20,8 @@ int main(int argc, char *argv[])
     rootContext->setContextProperty("listModel", controller->listModel());
     rootContext->setContextProperty("controller", controller);
 
-    engine.addImageProvider("progress", new ProgressImageProvider);
+    engine.addImageProvider("progress", controller->progressImageProvider());
+    engine.addImageProvider("thumbnail", controller->thumbnailImageProvider());
 
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
 

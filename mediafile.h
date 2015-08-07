@@ -8,8 +8,9 @@ class MediaFile
 public:
     enum Type
     {
-        VideoType,
-        AudioType
+        ImageFileType,
+        VideoFileType,
+        AudioFileType
     };
 
     enum State

@@ -40,6 +40,7 @@ public:
     static bool isValidVideoDirectory(const QString &path);
     static bool isLocalPath(const QString &urlStr);
     static QString localPath(const QString &url);
+    static bool createPath(const QString &path);
 };
 
 #endif // UTILITY_H

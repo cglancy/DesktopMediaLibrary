@@ -6,6 +6,7 @@
 #include <QMap>
 
 class VideoFile;
+class ImageFile;
 class CategoryNode;
 
 class Video
@@ -35,8 +36,8 @@ public:
     QString summary() const;
     void setSummary(const QString &summary);
 
-    QString thumbnailUrl() const;
-    void setThumbnailUrl(const QString &url);
+    ImageFile * thumbnailFile() const;
+    void setThumbnailFile(ImageFile *file);
 
     QString videoUrl() const;
     void setVideoUrl(const QString &url);
@@ -56,9 +57,9 @@ private:
     QString _id;
     QString _title;
     QString _summary;
-    QString _thumbUrl;
     QString _videoUrl;
     QString _length;
+    ImageFile *_thumbnailFile;
     QList<VideoFile*> _fileList;
     QList<CategoryNode*> _categoryList;
     QMap<Quality, VideoFile*> _fileMap;

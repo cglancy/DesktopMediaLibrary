@@ -60,6 +60,7 @@ private:
     QString fileUrlString(Video *video, Video::Quality quality) const;
     QString fileSizeString(Video *video, Video::Quality quality) const;
     QString fileProgressImage(Video *video, Video::Quality quality) const;
+    QString thumbnailUrlString(Video *video) const;
 
 private:
     CategoryNode *_filterCategory;

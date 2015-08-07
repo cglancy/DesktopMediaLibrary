@@ -2,6 +2,7 @@
 #include "categorynode.h"
 #include "video.h"
 #include "videofile.h"
+#include "imagefile.h"
 #include "progressimageprovider.h"
 
 #include <QLocale>
@@ -169,7 +170,7 @@ QVariant ListModel::data(const QModelIndex &index, int role) const
     else if (role == LengthRole)
         v = QVariant(video->length());
     else if (role == ThumbnailUrlRole)
-        v = QVariant(QUrl(video->thumbnailUrl()));
+        v = QVariant(thumbnailUrlString(video));
     else if (role == OnlineOnlyRole)
         v = QVariant(video->isOnlineOnly());
     else if (role == OnlineUrlRole)
@@ -267,6 +268,13 @@ QString ListModel::fileProgressImage(Video *video, Video::Quality quality) const
 
     str = "image://progress/" + ProgressImageProvider::imageName(file->state(), file->percentComplete());
 
+    return str;
+}
+
+QString ListModel::thumbnailUrlString(Video *video) const
+{
+    QString str;
+    str = "image://thumbnail/" + video->id();
     return str;
 }
 

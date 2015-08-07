@@ -18,8 +18,6 @@ public:
     static void progressAndState(const QString &imageName, MediaFile::State &state, int &progress);
 
     QPixmap requestPixmap(const QString &id, QSize *size, const QSize &requestedSize);
-//    virtual QPixmap requestPixmap(const QString &id, QSize *size,
-//        const QSize &requestedSize, bool requestedAutoTransform);
 
 private:
     QPixmap createPixmap(const QSize &size, MediaFile::State state, int progress);
@@ -31,7 +29,6 @@ private:
 
     static QMap<MediaFile::State, QString> _nameMap;
     static QMap<QString, MediaFile::State> _stateMap;
-    QHash<QString, QPixmap> _pixmapHash;
 };
 
 #endif // PROGRESSIMAGEPROVIDER_H

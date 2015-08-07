@@ -1,6 +1,7 @@
 #include "treemodel.h"
 #include "categorynode.h"
 #include "videofile.h"
+#include "imagefile.h"
 #include "video.h"
 #include "utility.h"
 
@@ -57,14 +58,19 @@ QList<Video*> TreeModel::videos() const
     return _videoHash.values();
 }
 
-MediaFile * TreeModel::file(const QString &url) const
+MediaFile * TreeModel::fileForUrl(const QString &url) const
 {
     return _fileUrlHash.value(url);
 }
 
-Video * TreeModel::video(const QString &url) const
+Video * TreeModel::videoForUrl(const QString &url) const
 {
     return _videoUrlHash.value(url);
+}
+
+Video *TreeModel::video(const QString &id) const
+{
+    return _videoHash.value(id);
 }
 
 void TreeModel::initWithFile(const QString &xmlFilename)
@@ -106,8 +112,7 @@ void TreeModel::initWithFile(const QString &xmlFilename)
 			}
 			else if (xml.name() == "category") 
 			{
-                CategoryNode *category = parseCategory(xml, categoryState.top());
-                categoryState.push(category);
+                parseCategory(xml, categoryState);
 			}
 			else if (xml.name() == "videoref")
 			{
@@ -192,26 +197,15 @@ bool TreeModel::parseLibrary(QXmlStreamReader& xml)
     return true;
 }
 
-bool TreeModel::createDirectory(const QString &dirPath)
+void TreeModel::parseCategory(QXmlStreamReader& xml, QStack<CategoryNode*> &stack)
 {
-    QDir dir;
-    bool success = dir.mkpath(dirPath);
-    if (!success)
-        QMessageBox::critical(QApplication::activeWindow(), Utility::applicationName(), tr("Unable to create folder %1.").arg(dirPath), QMessageBox::Ok);
-
-    return success;
-}
-
-CategoryNode* TreeModel::parseCategory(QXmlStreamReader& xml, CategoryNode *parent)
-{
-    CategoryNode *category = new CategoryNode(parent);
+    CategoryNode *category = new CategoryNode(stack.top());
+    stack.push(category);
 
 	QXmlStreamAttributes attributes = xml.attributes();
 
 	if (attributes.hasAttribute("name")) 
         category->setName(attributes.value("name").toString());
-
-    return category;
 }
 
 void TreeModel::parseVideoRef(QXmlStreamReader& xml, CategoryNode *category)
@@ -246,7 +240,11 @@ Video* TreeModel::parseVideo(QXmlStreamReader& xml)
         video->setLength(attributes.value("length").toString());
 
     if (attributes.hasAttribute("thumbnailUrl"))
-        video->setThumbnailUrl(attributes.value("thumbnailUrl").toString());
+    {
+        ImageFile *imageFile = new ImageFile(video);
+        video->setThumbnailFile(imageFile);
+        imageFile->setUrl(attributes.value("thumbnailUrl").toString());
+    }
 
     if (attributes.hasAttribute("videoUrl"))
         video->setVideoUrl(attributes.value("videoUrl").toString());
@@ -473,6 +471,7 @@ void TreeModel::updateChildren(CategoryNode *category)
 
 void TreeModel::updateAll(CategoryNode *category)
 {
+#if 0
     if (!category)
         category = _rootCategory;
 
@@ -481,4 +480,10 @@ void TreeModel::updateAll(CategoryNode *category)
 
     foreach (CategoryNode *childCategory, category->categories())
         updateAll(childCategory);
+#else
+    Q_UNUSED(category);
+    emit layoutAboutToBeChanged();
+    emit layoutChanged();
+    emit dataChanged(QModelIndex(), QModelIndex());
+#endif
 }

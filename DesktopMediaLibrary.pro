@@ -1,6 +1,6 @@
 TEMPLATE = app
 
-QT += qml quick network widgets concurrent
+QT += qml quick network widgets concurrent testlib
 
 SOURCES += main.cpp \
     maincontroller.cpp \
@@ -13,7 +13,9 @@ SOURCES += main.cpp \
     videofile.cpp \
     progressimageprovider.cpp \
     mediafile.cpp \
-    downloadmanager.cpp
+    downloadmanager.cpp \
+    imagefile.cpp \
+    thumbnailimageprovider.cpp
 
 RESOURCES += qml.qrc
 
@@ -34,4 +36,6 @@ HEADERS += \
     videofile.h \
     progressimageprovider.h \
     mediafile.h \
-    downloadmanager.h
+    downloadmanager.h \
+    imagefile.h \
+    thumbnailimageprovider.h

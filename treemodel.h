@@ -5,6 +5,7 @@
 #include <QHash>
 #include <QList>
 #include <QPixmap>
+#include <QStack>
 
 class CategoryNode;
 class Video;
@@ -32,8 +33,9 @@ public:
     CategoryNode * rootCategory() const;
 	QList<Video*> videos() const;
 
-    MediaFile * file(const QString &url) const;
-    Video * video(const QString &url) const;
+    MediaFile * fileForUrl(const QString &url) const;
+    Video * videoForUrl(const QString &url) const;
+    Video * video(const QString &id) const;
 
     QModelIndex index(CategoryNode *category) const;
     CategoryNode * category(const QModelIndex &index) const;
@@ -54,12 +56,11 @@ public:
     void updateAll(CategoryNode *category = 0);
 
 private:
-    CategoryNode* parseCategory(QXmlStreamReader& xml, CategoryNode *parent);
+    void parseCategory(QXmlStreamReader& xml, QStack<CategoryNode*> &stack);
     void parseVideoRef(QXmlStreamReader& xml, CategoryNode *parent);
     Video* parseVideo(QXmlStreamReader& xml);
-	void parseFile(QXmlStreamReader& xml, Video *video);
+    void parseFile(QXmlStreamReader& xml, Video *video);
 	bool parseLibrary(QXmlStreamReader& xml);
-    bool createDirectory(const QString &path);
     QString stripUrlQuery(const QString &url);
     static void initFileState(MediaFile *file);
 

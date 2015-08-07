@@ -1,5 +1,6 @@
 #include "downloadmanager.h"
 #include "mediafile.h"
+#include "video.h"
 #include "utility.h"
 
 #include <QNetworkAccessManager>
@@ -12,10 +13,10 @@
 #include <QUrl>
 
 
-DownloadManager::DownloadManager(QObject *parent)
-	: QObject(parent)
+DownloadManager::DownloadManager(QNetworkAccessManager *nam, QObject *parent)
+    : QObject(parent),
+      _networkAccessManager(nam)
 {
-	_networkAccessManager = new QNetworkAccessManager(this);
 }
 
 DownloadManager::~DownloadManager()
@@ -25,7 +26,85 @@ DownloadManager::~DownloadManager()
 
 bool DownloadManager::isDownloading() const
 {
-    return _downloadHash.size() > 0;
+    return _fileHash.size() > 0;
+}
+
+void DownloadManager::getFileSize(MediaFile *file)
+{
+    Q_ASSERT(file);
+    if (!file)
+        return;
+
+    if (!proceedWithSizeRequest(file))
+        return;
+
+    QNetworkRequest request;
+    request.setUrl(QUrl(file->url()));
+
+    QNetworkReply *reply = _networkAccessManager->head(request);
+    connect(reply, &QNetworkReply::finished, this, &DownloadManager::sizeFinished);
+    connect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(error(QNetworkReply::NetworkError)));
+
+    file->setFileSize(0);
+    _sizeHash.insert(reply, file);
+
+    qDebug() << "Requested size for " << file->url();
+}
+
+bool DownloadManager::proceedWithSizeRequest(MediaFile *file)
+{
+    if (file->url().isEmpty())
+    {
+        file->setState(MediaFile::DownloadErrorState);
+        file->setDownloadError(tr("Error: Invalid URL"));
+        emit fileSizeFinished(file);
+        return false;
+    }
+
+    if (QFile::exists(file->localFilePath()))
+    {
+        QFileInfo fi(file->localFilePath());
+        file->setState(MediaFile::DownloadedState);
+        file->setFileSize(fi.size());
+        emit fileSizeFinished(file);
+        return false;
+    }
+    else if (QFile::exists(file->localDownloadPath()))
+    {
+        QFileInfo fi(file->localFilePath());
+        file->setState(MediaFile::DownloadingPausedState);
+        file->setBytesReceived(fi.size());
+        return true;
+    }
+
+    return true;
+}
+
+void DownloadManager::sizeFinished()
+{
+    QNetworkReply *reply = static_cast<QNetworkReply*>(sender());
+    reply->deleteLater();
+
+    Q_ASSERT(_sizeHash.contains(reply));
+    if (!_sizeHash.contains(reply))
+        return;
+
+    MediaFile *file = _sizeHash.value(reply);
+    _sizeHash.remove(reply);
+
+    if (reply->error() == QNetworkReply::NoError)
+    {
+        qint64 size = reply->header(QNetworkRequest::ContentLengthHeader).toLongLong();
+        file->setFileSize(size);
+        emit fileSizeFinished(file);
+
+        qDebug() << file->url() << " size = " << size;
+    }
+    else
+    {
+        file->setState(MediaFile::DownloadErrorState);
+        file->setDownloadError(reply->errorString());
+    }
 }
 
 void DownloadManager::downloadFile(MediaFile *file)
@@ -42,7 +121,7 @@ void DownloadManager::downloadFile(MediaFile *file)
 
     if (!fi.exists())
     {
-        if (!createPath(downloadPath))
+        if (!Utility::createPath(downloadPath))
         {
             qDebug() << "FileManager::downloadFile() Error: Unable to make directory path." << downloadPath;
             return;
@@ -88,28 +167,20 @@ void DownloadManager::downloadFile(MediaFile *file)
     connect(reply, &QNetworkReply::downloadProgress, this, &DownloadManager::progress);
     connect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(error(QNetworkReply::NetworkError)));
 
-    DownloadData data(file, downloadFile);
-    _downloadHash.insert(reply, data);
+    FileData data(file, downloadFile);
+    _fileHash.insert(reply, data);
 
     file->setState(MediaFile::DownloadingState);
 
 }
 
-bool DownloadManager::createPath(const QString &filePath)
-{
-    QFileInfo fileInfo(filePath);
-    QString dirPath = fileInfo.absolutePath();
-    QDir dir(dirPath);
-    return dir.mkpath(dirPath);
-}
-
-void DownloadManager::cancelDownload(MediaFile *file)
+void DownloadManager::cancelFileDownload(MediaFile *file)
 {
     if (!file)
         return;
 
-    auto i = _downloadHash.begin();
-    while (i != _downloadHash.end())
+    auto i = _fileHash.begin();
+    while (i != _fileHash.end())
     {
         if (i.value().mediaFile == file)
         {
@@ -123,8 +194,8 @@ void DownloadManager::cancelDownload(MediaFile *file)
 
 void DownloadManager::cancelAllDownloads()
 {
-    auto i = _downloadHash.begin();
-    while (i != _downloadHash.end())
+    auto i = _fileHash.begin();
+    while (i != _fileHash.end())
     {
         i.key()->abort();
         i++;
@@ -135,7 +206,7 @@ void DownloadManager::readyRead()
 {
     QNetworkReply *reply = static_cast<QNetworkReply*>(sender());
 
-    QFile *downloadFile = _downloadHash.value(reply).file;
+    QFile *downloadFile = _fileHash.value(reply).file;
     if (downloadFile)
         downloadFile->write(reply->readAll());
 }
@@ -143,20 +214,20 @@ void DownloadManager::readyRead()
 void DownloadManager::progress(qint64 bytesReceived, qint64 bytesTotal)
 {
     QNetworkReply *reply = static_cast<QNetworkReply*>(sender());
-    MediaFile *file = _downloadHash.value(reply).mediaFile;
+    MediaFile *file = _fileHash.value(reply).mediaFile;
     if (file)
     {
         file->setFileSize(bytesTotal);
         file->setBytesReceived(file->bytesResumed() + bytesReceived);
     }
 
-    emit downloadProgress(file, bytesReceived, bytesTotal);
+    emit fileProgress(file, bytesReceived, bytesTotal);
 }
 
 void DownloadManager::finished()
 {
     QNetworkReply *reply = static_cast<QNetworkReply*>(sender());
-    DownloadData data = _downloadHash.value(reply);
+    FileData data = _fileHash.value(reply);
     MediaFile *file = data.mediaFile;
     QFile *downloadFile = data.file;
 
@@ -196,7 +267,7 @@ void DownloadManager::finished()
             delete downloadFile;
         }
 
-        qDebug() << "Download canceled for URL = " << file->url();
+        qDebug() << "Download canceled for " << file->url();
     }
     else
     {
@@ -209,9 +280,9 @@ void DownloadManager::finished()
         }
     }
 
-    emit downloadFinished(file);
+    emit fileFinished(file);
 
-    _downloadHash.remove(reply);
+    _fileHash.remove(reply);
     reply->deleteLater();
 }
 

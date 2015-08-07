@@ -2,7 +2,7 @@
 #include "video.h"
 
 VideoFile::VideoFile(Video *video, Resolution resolution)
-    : MediaFile(MediaFile::VideoType),
+    : MediaFile(MediaFile::VideoFileType),
       _video(video),
       _resolution(resolution)
 {

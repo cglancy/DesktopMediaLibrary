@@ -1,13 +1,18 @@
 #include "video.h"
 #include "videofile.h"
+#include "imagefile.h"
 
 Video::Video(const QString &id)
-    : _id(id)
+    : _id(id),
+    _thumbnailFile(0)
 {
 }
 
 Video::~Video()
 {
+    if (_thumbnailFile)
+        delete _thumbnailFile;
+
     qDeleteAll(_fileList);
 }
 
@@ -51,14 +56,14 @@ void Video::setSummary(const QString &summary)
     _summary = summary;
 }
 
-QString Video::thumbnailUrl() const
+ImageFile * Video::thumbnailFile() const
 {
-    return _thumbUrl;
+    return _thumbnailFile;
 }
 
-void Video::setThumbnailUrl(const QString &url)
+void Video::setThumbnailFile(ImageFile *file)
 {
-    _thumbUrl = url;
+    _thumbnailFile = file;
 }
 
 QString Video::videoUrl() const

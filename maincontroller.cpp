@@ -5,26 +5,38 @@
 #include "mediafile.h"
 #include "videofile.h"
 #include "categorynode.h"
+#include "progressimageprovider.h"
+#include "thumbnailimageprovider.h"
 
 #include <QRegExp>
 #include <QDesktopServices>
 #include <QTimer>
+#include <QModelIndex>
 #include <QDebug>
 
 MainController::MainController(QObject *parent)
     : QObject(parent),
+      _networkAccessManager(0),
       _treeModel(0),
       _listModel(0),
-      _fileManager(0)
+      _downloadManager(0),
+      _progressImageProvider(0),
+      _thumbnailImageProvider(0)
 {
-    _fileManager = new DownloadManager(this);
+    _networkAccessManager = new QNetworkAccessManager(this);
+
+    _downloadManager = new DownloadManager(_networkAccessManager, this);
     _treeModel = new TreeModel(this);
     _listModel = new ListModel(this);
-    _timer = new QTimer(this);
+    _progressImageProvider = new ProgressImageProvider();
+    _thumbnailImageProvider = new ThumbnailImageProvider(_networkAccessManager, _treeModel);
 
-    connect(_fileManager, &DownloadManager::downloadProgress, this, &MainController::downloadProgress);
-    connect(_fileManager, &DownloadManager::downloadFinished, this, &MainController::downloadFinished);
-    connect(_timer, &QTimer::timeout, this, &MainController::updateTree);
+    connect(_downloadManager, &DownloadManager::fileProgress, this, &MainController::downloadProgress);
+    connect(_downloadManager, &DownloadManager::fileFinished, this, &MainController::downloadFinished);
+}
+
+MainController::~MainController()
+{
 }
 
 void MainController::loadData()
@@ -59,6 +71,16 @@ ListModel * MainController::listModel() const
     return _listModel;
 }
 
+ProgressImageProvider *MainController::progressImageProvider() const
+{
+    return _progressImageProvider;
+}
+
+ThumbnailImageProvider *MainController::thumbnailImageProvider() const
+{
+    return _thumbnailImageProvider;
+}
+
 void MainController::setCategory(const QModelIndex &index)
 {
     CategoryNode *category = _treeModel->category(index);
@@ -70,7 +92,7 @@ void MainController::clickVideoButton(const QString &url)
 {
     qDebug() << "MainController::clickVideoButton(" << url << ")";
 
-    MediaFile *file = _treeModel->file(url);
+    MediaFile *file = _treeModel->fileForUrl(url);
     if (file)
     {
         MediaFile::State state = file->state();
@@ -79,11 +101,11 @@ void MainController::clickVideoButton(const QString &url)
             state == MediaFile::DownloadingPausedState ||
             state == MediaFile::DownloadErrorState)
         {
-            _fileManager->downloadFile(file);
+            _downloadManager->downloadFile(file);
         }
         else if (state == MediaFile::DownloadingState)
         {
-            _fileManager->cancelDownload(file);
+            _downloadManager->cancelFileDownload(file);
         }
         else if (state == MediaFile::DownloadedState)
         {
@@ -119,12 +141,14 @@ void MainController::setCategoryExport(const QModelIndex &index, int value)
     if (category)
     {
         category->setExport(value == Qt::Checked ? true : false);
-        //_treeModel->updateCategory(category);
-        _timer->start(500);
+        _treeModel->updateCategory(category);
     }
 }
 
-void MainController::updateTree()
+QVariant MainController::firstIndex()
 {
-    _treeModel->updateAll();
+    CategoryNode *root = _treeModel->rootCategory();
+    CategoryNode *firstIndex = root->categories().first();
+    QModelIndex index = _treeModel->index(firstIndex);
+    return QVariant(index);
 }
