@@ -8,7 +8,7 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QFile>
-#include <QSignalSpy>
+#include <QEventLoop>
 #include <QtConcurrent>
 #include <QDebug>
 
@@ -62,23 +62,29 @@ QImage ThumbnailImageProvider::downloadFile(ImageFile *file)
     qDebug() << "downloading thumbnail " << file->url();
 
     QNetworkReply *reply = _networkAccessManager->get(request);
-    QSignalSpy spy(reply, SIGNAL(finished()));
-    if (spy.wait(30000))
-    {
-        if (reply->error() == QNetworkReply::NoError)
-        {
-            qDebug() << "downloaded thumbnail " << file->url();
+    QEventLoop eventLoop;
+    QObject::connect(reply, &QNetworkReply::finished, &eventLoop, &QEventLoop::quit);
+    eventLoop.exec();
 
-            QByteArray data = reply->readAll();
-            image.loadFromData(data);
-            QtConcurrent::run(saveImage, image, file->localFilePath());
-        }
+    if (reply->error() == QNetworkReply::NoError)
+    {
+        qDebug() << "downloaded thumbnail " << file->url();
+
+        QByteArray data = reply->readAll();
+        image.loadFromData(data);
+#if 1
+        QtConcurrent::run(saveImage, image, file->localFilePath());
+#else
+        QString path = file->localFilePath();
+        Utility::createPath(path);
+        image.save(path);
+#endif
     }
 
     return image;
 }
 
-bool ThumbnailImageProvider::saveImage(const QImage &image, const QString &path)
+bool ThumbnailImageProvider::saveImage(QImage image, QString path)
 {
     Utility::createPath(path);
     bool saved = image.save(path);

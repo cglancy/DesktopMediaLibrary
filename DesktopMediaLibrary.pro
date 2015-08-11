@@ -1,6 +1,6 @@
 TEMPLATE = app
 
-QT += qml quick network widgets concurrent testlib
+QT += qml quick network widgets concurrent
 
 SOURCES += main.cpp \
     maincontroller.cpp \

@@ -17,7 +17,7 @@ public:
 
 private:
     QImage downloadFile(ImageFile *file);
-    static bool saveImage(const QImage &image, const QString &path);
+    static bool saveImage(QImage image, QString path);
 
 private:
     QNetworkAccessManager *_networkAccessManager;
